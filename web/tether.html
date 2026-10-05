@@ -1,0 +1,107 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leash</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"Geist Pixel";src:url(fonts/GeistPixel-Square.woff2) format("woff2");font-display:block}
+:root{--bg:#050506;--ink:#F2F2F3;--muted:#7E828C;--line:#1B1B20;--accent:#8B90FF;--refuse:#FF4D4D}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg);color:var(--ink);font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.hero{position:relative;height:100vh;min-height:720px;max-height:980px}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+nav{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:24px 36px;font:500 12px 'Geist Mono';letter-spacing:.08em;text-transform:uppercase;color:var(--muted);z-index:2}
+.logo{font:600 18px Geist;letter-spacing:-.02em;text-transform:none;color:var(--ink);display:flex;gap:10px;align-items:center}
+nav .r{display:flex;gap:28px;align-items:center}
+.live{display:flex;gap:8px;align-items:center;color:var(--ink)}.live i{width:7px;height:7px;border-radius:50%;background:#22C55E;box-shadow:0 0 10px #22C55E}
+.copy{position:absolute;left:36px;top:118px;z-index:2;max-width:640px}
+.k{font:500 12px 'Geist Mono';letter-spacing:.12em;text-transform:uppercase;color:var(--refuse)}
+h1{font-size:64px;line-height:.98;font-weight:600;letter-spacing:-.045em;margin-top:16px}
+h1 .r{color:var(--refuse)} h1 .px{font-family:"Geist Pixel";font-weight:400;letter-spacing:-.02em;color:var(--accent)}
+.lede{margin-top:20px;font-size:18px;line-height:1.5;color:var(--muted);max-width:520px}.lede b{color:var(--ink);font-weight:500}
+.cta{display:flex;gap:12px;margin-top:24px}
+.btn{font:500 13px 'Geist Mono';letter-spacing:.06em;text-transform:uppercase;padding:13px 18px;border-radius:2px;border:1px solid #2A2A31;background:rgba(5,5,6,.7);color:var(--ink)}
+.btn.p{background:var(--ink);color:#000;border-color:var(--ink)}
+.foot{position:absolute;right:36px;top:118px;z-index:2;text-align:right;font:12px 'Geist Mono';color:var(--muted);line-height:1.9}
+.foot b{font:400 30px "Geist Pixel";color:var(--ink);display:block;letter-spacing:-.02em;line-height:1.1}
+.foot .rr b{color:var(--refuse)}
+</style></head><body>
+<section class="hero"><canvas id="c"></canvas>
+<nav><div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" stroke="#F2F2F3" stroke-width="2"/><path d="M11 11 C 15 14, 17 16, 21 21" stroke="#8B90FF" stroke-width="2"/></svg>Leash</div>
+<div class="r"><span>Docs</span><span>SDK</span><span>Sellers</span><span>Judges</span><span class="live"><i></i>Monad <span id="blk">—</span></span></div></nav>
+<div class="copy"><div class="k">18 Mar 2025 · an AI agent was hijacked</div>
+<h1>It lost <span class="r">55 ETH</span>.<br>On a Leash: <span class="px">$5</span>.</h1>
+<p class="lede">Your Face ID sets each agent's daily budget. <b>Monad checks it on every payment</b>, and anyone can read it before they get paid. Past the limit, the chain says no.</p>
+<div class="cta"><span class="btn p">Hijack my own agent →</span><span class="btn">Add to your API</span></div></div>
+<div class="foot"><span>unleashed twin</span><b id="ub">$20.00</b><span>on a leash · spent</span><b id="lb">$0.00</b><span class="rr">refused on-chain</span><b id="rf" style="color:#FF4D4D">0</b></div>
+</section>
+<script>
+const cv=document.getElementById('c'),cx=cv.getContext('2d');let W,H,D=Math.min(2,devicePixelRatio||1);
+function size(){W=cv.clientWidth;H=cv.clientHeight;cv.width=W*D;cv.height=H*D;cx.setTransform(D,0,0,D,0,0)}size();addEventListener('resize',size);
+const C={ac:'#8B90FF',rf:'#FF4D4D',ink:'#F2F2F3',mu:'#7E828C',ln:'#1B1B20'};
+// ---------- live block rail (real Monad testnet, falls back to a 400ms clock)
+let block=0,blocks=[];const RPC='https://testnet-rpc.monad.xyz';
+async function poll(){try{const r=await fetch(RPC,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_blockNumber',params:[]})});const j=await r.json();const b=parseInt(j.result,16);if(!block)block=b-1;while(block<b){block++;blocks.push({n:block,t:performance.now(),ev:[]});}}catch(e){block=block?block+1:68400000;blocks.push({n:block,t:performance.now(),ev:[]})}
+ if(blocks.length>400)blocks.splice(0,blocks.length-400);document.getElementById('blk').textContent=block.toLocaleString()}
+setInterval(poll,400);poll();
+// ---------- rope (verlet)
+let ag={x:0,y:0,vx:0,vy:0};const N=34,P=[];let anchor,cap=5,spent=0,ropeMin=70,ropeMax=0;
+function setup(){anchor={x:W*.42,y:H*.72};ropeMax=W*.34;P.length=0;for(let i=0;i<N;i++){const x=anchor.x+i*2,y=anchor.y;P.push({x,y,px:x,py:y})};ag={x:0,y:0,vx:0,vy:0}}
+setup();addEventListener('resize',setup);
+const ropeLen=()=>ropeMin+(ropeMax-ropeMin)*Math.min(1,spent/cap);
+let twin={x:0,y:0,vx:0,bal:20},bursts=[],coins=[],refused=0,attempt=0,taut=0,hum=0;
+function resetTwin(){twin={x:W*.36,y:H*.84,vx:.0,bal:20}}resetTwin();
+function step(t){const L=ropeLen(),seg=L/(N-1);
+ // the agent is dragged toward the hijacker; the leash length is the budget spent
+ const dx=.94,dy=-.34,Dx=anchor.x+dx*L,Dy=anchor.y+dy*L+Math.sin(t/600)*8;
+ if(!ag.x){ag.x=anchor.x+20;ag.y=anchor.y}
+ ag.vx+=(Dx-ag.x)*.06+Math.sin(t/170)*.25;ag.vy+=(Dy-ag.y)*.06;ag.vx*=.84;ag.vy*=.84;ag.x+=ag.vx;ag.y+=ag.vy;
+ // rope between two pinned ends, sags when slack
+ for(let i=1;i<N-1;i++){const p=P[i];const vx=(p.x-p.px)*.96,vy=(p.y-p.py)*.96;p.px=p.x;p.py=p.y;p.x+=vx;p.y+=vy+.35}
+ for(let k=0;k<30;k++){P[0].x=anchor.x;P[0].y=anchor.y;P[N-1].x=ag.x;P[N-1].y=ag.y;
+  for(let i=1;i<N;i++){const p=P[i-1],q=P[i];const ddx=q.x-p.x,ddy=q.y-p.y,d=Math.hypot(ddx,ddy)||1;if(d<=seg)continue;const f=(d-seg)/d*.5;p.x+=ddx*f;p.y+=ddy*f;q.x-=ddx*f;q.y-=ddy*f}}
+ P[N-1].x=ag.x;P[N-1].y=ag.y;
+ const d=Math.hypot(ag.x-anchor.x,ag.y-anchor.y);taut+=((d>L*.97&&spent>=cap?1:0)-taut)*.15;
+ twin.vx+=.02;twin.x+=twin.vx;twin.y=H*.84+Math.sin(t/500)*6}
+// ---------- the script: 20 hijacked $1 attempts, same for both agents
+function attemptPay(){if(attempt>=20){setTimeout(()=>{spent=0;refused=0;attempt=0;resetTwin();upd()},3200);return}
+ attempt++;twin.bal=Math.max(0,twin.bal-1);const b=blocks[blocks.length-1];
+ if(spent<cap){spent+=1;coins.push({t:0});b&&b.ev.push('ok')}
+ else{refused++;ag.vx-=13;ag.vy+=5;const a=ag;bursts.push({x:a.x,y:a.y,r:4,o:1,n:b?b.n:0});hum=1;b&&b.ev.push('no')}
+ upd();setTimeout(attemptPay,attempt<5?900:620)}
+function upd(){ub.textContent='$'+twin.bal.toFixed(2);lb.textContent='$'+spent.toFixed(2);rf.textContent=refused}
+setTimeout(attemptPay,1400);
+// ---------- draw
+function draw(t){step(t);cx.clearRect(0,0,W,H);
+ // field grid of dots
+ cx.fillStyle='#121216';for(let x=18;x<W;x+=28)for(let y=18;y<H-90;y+=28)cx.fillRect(x,y,1.5,1.5);
+ const a=P[N-1];
+ // hijack pull lines
+ cx.strokeStyle='rgba(255,77,77,.16)';cx.setLineDash([2,7]);cx.lineWidth=1;for(let i=-2;i<=2;i++){cx.beginPath();cx.moveTo(a.x+18,a.y+i*9);cx.lineTo(W-40,a.y+i*26);cx.stroke()}cx.setLineDash([]);
+ cx.fillStyle='rgba(255,77,77,.7)';cx.font='500 11px Geist Mono';cx.textAlign='right';cx.fillText('HIJACKED PROMPT → 0xBAD…F00D',W-40,a.y-46);
+ // rope
+ const col=taut>.5?C.ink:C.ac;cx.lineWidth=1.6+taut*1.2;cx.strokeStyle=col;cx.shadowColor=taut>.5?'rgba(242,242,243,.6)':'rgba(139,144,255,.6)';cx.shadowBlur=12+hum*24;
+ cx.beginPath();cx.moveTo(P[0].x,P[0].y);for(let i=1;i<N-1;i++){const mx=(P[i].x+P[i+1].x)/2,my=(P[i].y+P[i+1].y)/2;cx.quadraticCurveTo(P[i].x,P[i].y,mx,my)}cx.lineTo(a.x,a.y);cx.stroke();cx.shadowBlur=0;hum*=.9;
+ // coins travelling to the seller
+ for(const c of coins){c.t+=.02;const x=a.x+(W-60-a.x)*c.t,y=a.y-20*Math.sin(c.t*3.14);cx.fillStyle=C.ac;cx.fillRect(x-3,y-3,6,6)}coins=coins.filter(c=>c.t<1);
+ // anchor: passkey
+ cx.strokeStyle=C.ink;cx.lineWidth=1.5;cx.strokeRect(anchor.x-14,anchor.y-14,28,28);cx.fillStyle=C.ink;cx.fillRect(anchor.x-4,anchor.y-4,8,8);
+ cx.textAlign='center';cx.fillStyle=C.mu;cx.font='500 11px Geist Mono';cx.fillText('OWNER · FACE ID',anchor.x,anchor.y+34);
+ // agent
+ cx.fillStyle=taut>.5?C.ink:C.ac;cx.beginPath();cx.arc(a.x,a.y,9,0,7);cx.fill();cx.strokeStyle='rgba(139,144,255,.35)';cx.beginPath();cx.arc(a.x,a.y,16,0,7);cx.stroke();
+ cx.fillStyle=C.ink;cx.font='400 22px "Geist Pixel"';cx.fillText(spent>=cap?'$0.00 · CAP HIT':'$'+(cap-spent).toFixed(2)+' left',a.x,a.y-30);
+ cx.fillStyle=C.mu;cx.font='500 11px Geist Mono';cx.fillText('AGENT #2008',a.x,a.y+34);
+ // refusal bursts
+ for(const b of bursts){b.r+=3.2;b.o*=.93;cx.strokeStyle=`rgba(255,77,77,${b.o})`;cx.lineWidth=2;cx.beginPath();cx.arc(b.x,b.y,b.r,0,7);cx.stroke();cx.fillStyle=`rgba(255,77,77,${Math.min(1,b.o*1.6)})`;cx.font='500 11px Geist Mono';cx.textAlign='left';cx.fillText('REFUSED · BLOCK '+b.n.toLocaleString(),b.x+30,b.y+34+(1-b.o)*18);cx.textAlign='center'}bursts=bursts.filter(b=>b.o>.03);
+ // unleashed twin
+ cx.setLineDash([3,6]);cx.strokeStyle='rgba(126,130,140,.5)';cx.beginPath();cx.moveTo(anchor.x,anchor.y+44);cx.lineTo(Math.min(twin.x,W-90),twin.y);cx.stroke();cx.setLineDash([]);
+ cx.fillStyle='rgba(255,77,77,.85)';cx.beginPath();cx.arc(Math.min(twin.x,W-90),twin.y,6,0,7);cx.fill();
+ cx.font='400 16px "Geist Pixel"';cx.fillText('$'+twin.bal.toFixed(2),Math.min(twin.x,W-90),twin.y-16);
+ cx.fillStyle=C.mu;cx.font='500 10px Geist Mono';cx.fillText('UNLEASHED TWIN',Math.min(twin.x,W-90),twin.y+22);
+ // block rail
+ const cw=14,y0=H-62,now=performance.now();cx.fillStyle='#0B0B0E';cx.fillRect(0,y0-14,W,76);cx.fillStyle=C.ln;cx.fillRect(0,y0-14,W,1);
+ const n=Math.ceil(W/cw)+2;const list=blocks.slice(-n);
+ list.forEach((b,i)=>{const age=(now-b.t)/400;const x=W-(list.length-i)*cw-age*0+6;let f='#16161B';if(b.ev.includes('no'))f=C.rf;else if(b.ev.includes('ok'))f=C.ac;cx.fillStyle=f;cx.fillRect(x,y0,cw-3,cw-3);
+  if(b.n%20===0){cx.fillStyle=C.mu;cx.font='400 11px "Geist Pixel"';cx.textAlign='left';cx.fillText(b.n.toLocaleString(),x,y0+32)}});
+ cx.textAlign='left';cx.fillStyle=C.mu;cx.font='500 10px Geist Mono';cx.fillText('LIVE MONAD TESTNET BLOCKS · ONE CELL PER BLOCK · PAYMENTS REPLAYED IN THIS PREVIEW',36,y0-24);
+ requestAnimationFrame(draw)}
+requestAnimationFrame(draw);
+</script></body></html>
