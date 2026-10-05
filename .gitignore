@@ -5,3 +5,4 @@ typechain-types/
 coverage/
 .env
 working/
+.env.demo
