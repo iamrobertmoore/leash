@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leash</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060607;--surface:#0F0F12;--ink:#F2F2F3;--muted:#8A8F98;--line:#1F1F24;--accent:#8B90FF;--accent2:#B6B9FF;--refuse:#FF4D4D;--pass:#22C55E}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.bgfx{position:fixed;inset:0;pointer-events:none;
+ background:radial-gradient(900px 520px at 72% 8%,rgba(139,144,255,.20),transparent 60%),radial-gradient(700px 500px at 10% 90%,rgba(255,77,77,.08),transparent 60%)}
+.grain{position:fixed;inset:-50%;pointer-events:none;opacity:.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{position:relative;max-width:1240px;margin:0 auto;padding:26px 32px 56px}
+nav{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--muted)}
+.logo{display:flex;gap:10px;align-items:center;color:var(--ink);font-weight:600;font-size:18px;letter-spacing:-.02em}
+.net{font-family:'Geist Mono';font-size:12px;border:1px solid var(--line);padding:7px 11px;border-radius:99px;background:rgba(15,15,18,.8);display:flex;gap:8px;align-items:center}
+.net i{width:7px;height:7px;border-radius:50%;background:var(--pass);box-shadow:0 0 10px var(--pass)}
+.net b{color:var(--ink);font-weight:500}
+.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:40px;align-items:end;margin-top:70px}
+.kicker{font:500 12px 'Geist Mono';letter-spacing:.12em;text-transform:uppercase;color:var(--refuse);display:flex;gap:10px;align-items:center}
+.kicker:before{content:"";width:22px;height:1px;background:var(--refuse)}
+h1{font-size:68px;line-height:.98;font-weight:600;letter-spacing:-.045em;margin-top:18px}
+h1 .dim{color:var(--refuse)} h1 .a{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;color:transparent}
+.lede{font-size:19px;color:var(--muted);line-height:1.5;max-width:520px}
+.lede b{color:var(--ink);font-weight:500}
+.cta{display:flex;gap:12px;margin-top:26px}
+.btn{font:500 15px Geist;padding:13px 19px;border-radius:12px;border:1px solid var(--line);background:rgba(15,15,18,.9);color:var(--ink);cursor:pointer}
+.btn.p{background:var(--ink);color:#000;border-color:var(--ink);box-shadow:0 0 0 6px rgba(242,242,243,.06)}
+.arena{margin-top:56px;display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:rgba(12,12,15,.85);backdrop-filter:blur(6px)}
+.side{padding:26px 28px 22px;position:relative}
+.side+.side{border-left:1px solid var(--line)}
+.tag{font:500 11px 'Geist Mono';letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between}
+.tag .s{color:var(--refuse)} .side.l .tag .s{color:var(--accent)}
+.bal{display:flex;align-items:flex-end;gap:14px;margin-top:14px}
+.bal .n{font:600 84px/1 'Geist Mono';letter-spacing:-.06em;font-variant-numeric:tabular-nums}
+.side.u .bal .n{color:var(--refuse)}
+.bal .c{color:var(--muted);font-size:14px;padding-bottom:12px}
+.track{height:10px;border-radius:99px;background:#17171C;margin-top:18px;overflow:hidden;position:relative}
+.track i{position:absolute;inset:0 auto 0 0;border-radius:99px;transition:width .18s cubic-bezier(.2,.8,.2,1)}
+.side.u .track i{background:linear-gradient(90deg,#7a1f1f,var(--refuse))}
+.ringbox{display:flex;align-items:center;gap:22px;margin-top:6px}
+.ring{width:170px;height:170px;flex:none;transition:transform .12s}
+.ring.jolt{animation:jolt .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes jolt{0%{transform:translateY(0)}30%{transform:translateY(-5px) scale(1.02)}100%{transform:none}}
+.ringtxt .n{font:600 64px/1 'Geist Mono';letter-spacing:-.06em}
+.ringtxt .c{color:var(--muted);font-size:14px;margin-top:6px}
+.feed{margin-top:18px;height:182px;overflow:hidden;mask-image:linear-gradient(#000 70%,transparent)}
+.ev{display:grid;grid-template-columns:14px 1fr auto auto;gap:12px;align-items:center;font-size:13px;padding:8px 0;border-top:1px solid var(--line);animation:in .25s ease-out}
+@keyframes in{from{opacity:0;transform:translateY(-6px)}}
+.ev .d{width:7px;height:7px;border-radius:50%;background:#666}
+.ev.ok .d{background:var(--pass)} .ev.bad .d{background:var(--refuse);box-shadow:0 0 8px var(--refuse)}
+.ev.drain .d{background:var(--refuse)}
+.ev .h{font:12px 'Geist Mono';color:#5C5F68} .ev .v{font:13px 'Geist Mono'}
+.ev.bad .t{color:var(--refuse)}
+.foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding:16px 28px;font:12px 'Geist Mono';color:var(--muted)}
+.foot b{color:var(--ink);font-weight:500}
+.run{font:600 14px Geist;padding:11px 18px;border-radius:10px;border:0;background:var(--refuse);color:#fff;cursor:pointer;box-shadow:0 0 30px rgba(255,77,77,.35)}
+.seller{margin-top:18px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:16px 20px;background:rgba(12,12,15,.85)}
+.seller code{font:13px 'Geist Mono';color:var(--muted)} .seller code b{color:var(--accent);font-weight:500} .seller code s{text-decoration:none;color:var(--ink)}
+.pill{font:600 12px 'Geist Mono';padding:6px 10px;border-radius:8px;background:rgba(255,77,77,.12);color:var(--refuse);border:1px solid rgba(255,77,77,.3)}
+.note{font:12px 'Geist Mono';color:#55585f;margin-top:14px}
+@media (max-width:900px){h1{font-size:48px}.hero,.arena{grid-template-columns:1fr}.side+.side{border-left:0;border-top:1px solid var(--line)}.bal .n{font-size:60px}.seller{grid-template-columns:1fr}}
+</style></head><body><div class="bgfx"></div><div class="grain"></div><div class="wrap">
+<nav><div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 19 L12 12" stroke="#8B90FF" stroke-width="2" stroke-linecap="round"/><circle cx="15.5" cy="8.5" r="5" stroke="#F2F2F3" stroke-width="2"/></svg>Leash</div>
+<span class="net"><i></i>Monad testnet · block <b id="blk">68,392,114</b> · 0.4s</span></nav>
+
+<div class="hero">
+ <div><div class="kicker">18 Mar 2025 · AIXBT</div>
+ <h1>An AI agent lost <span class="dim">55&nbsp;ETH</span> in one night.<br><span class="a">On a Leash, $5.</span></h1></div>
+ <div><p class="lede">Give each agent <b>a daily budget your Face ID sets</b> and Monad checks on every single payment. Sellers can see the leash before they serve. <b>Revoke in one tap.</b></p>
+ <div class="cta"><button class="btn p">Attack my own agent →</button><button class="btn">Add to your API</button></div></div>
+</div>
+
+<div class="arena">
+ <div class="side u"><div class="tag"><span>Unleashed agent · hijacked</span><span class="s" id="us">draining</span></div>
+  <div class="bal"><span class="n" id="ub">$100</span><span class="c">wallet</span></div>
+  <div class="track"><i id="ut" style="width:100%"></i></div>
+  <div class="feed" id="uf"></div></div>
+ <div class="side l"><div class="tag"><span>Same agent · on a Leash</span><span class="s" id="ls">$5 / day</span></div>
+  <div class="ringbox">
+   <svg class="ring" id="ring" viewBox="0 0 170 170"><g transform="rotate(135 85 85)" fill="none" stroke-linecap="round">
+    <circle cx="85" cy="85" r="70" stroke="#1C1C22" stroke-width="12" stroke-dasharray="329.9 439.8"/>
+    <circle id="arc" cx="85" cy="85" r="70" stroke="url(#g)" stroke-width="12" stroke-dasharray="0 439.8" style="transition:stroke-dasharray .24s cubic-bezier(.2,.8,.2,1)"/>
+    <circle id="over" cx="85" cy="85" r="70" stroke="#FF4D4D" stroke-width="12" stroke-dasharray="0 439.8" opacity="0"/></g>
+    <defs><linearGradient id="g"><stop offset="0" stop-color="#8B90FF"/><stop offset="1" stop-color="#B6B9FF"/></linearGradient></defs></svg>
+   <div class="ringtxt"><div class="n" id="lb">$5.00</div><div class="c">left today · then Monad says no</div></div></div>
+  <div class="feed" id="lf"></div></div>
+</div>
+<div class="foot"><span>Same script, same 20 drain attempts. <b id="sum">Unleashed lost $0 · Leashed lost $0</b></span><button class="run" id="go">Run it again</button></div>
+
+<div class="seller"><span class="pill">402 · NOT SERVED</span>
+ <code><b>leash.check</b>(agent, api.weather, <s>$2.00</s>) → <s>REVOKED</s> · owner passkey 0x43b3…B3a2 · ERC-8004 #2008</code>
+ <code>1 read · 0 trust</code></div>
+<p class="note">Preview: animation replays the drain script. The live page runs it on Monad testnet and links every refusal to its block.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const hx=()=>'0x'+Math.random().toString(16).slice(2,6)+'…'+Math.random().toString(16).slice(2,6);
+let blk=68392114;setInterval(()=>{blk++;$('blk').textContent=blk.toLocaleString()},400);
+function ev(feed,cls,t,v){const d=document.createElement('div');d.className='ev '+cls;d.innerHTML=`<span class="d"></span><span class="t">${t}</span><span class="v">${v}</span><span class="h">${hx()}</span>`;feed.prepend(d);while(feed.children.length>9)feed.lastChild.remove()}
+function run(){
+ let u=100,l=5,lost=0,i=0;$('uf').innerHTML='';$('lf').innerHTML='';$('arc').style.strokeDasharray='0 439.8';$('over').style.opacity=0;
+ $('ub').textContent='$100';$('ut').style.width='100%';$('lb').textContent='$5.00';$('ls').textContent='$5 / day';
+ const step=()=>{ if(i>=20){$('us').textContent='empty';$('ls').textContent='held';return}
+  i++; u-=5; $('ub').textContent='$'+u; $('ut').style.width=u+'%'; ev($('uf'),'drain','Sent to attacker','−$5.00');
+  if(l>=5&&lost<5){l=0;lost=5;$('lb').textContent='$0.00';$('arc').style.strokeDasharray='329.9 439.8';ev($('lf'),'ok','Paid · inside cap','−$5.00')}
+  else{ev($('lf'),'bad','Refused on-chain · block '+blk.toLocaleString(),'$0.00');$('ring').classList.remove('jolt');void $('ring').offsetWidth;$('ring').classList.add('jolt');
+   const o=$('over');o.style.opacity=1;o.style.strokeDasharray='0 329.9 18 439.8';setTimeout(()=>o.style.opacity=0,260)}
+  $('sum').textContent=`Unleashed lost $${100-u} · Leashed lost $${lost}`; setTimeout(step,420)};
+ step()}
+$('go').onclick=run; run();
+</script></body></html>
