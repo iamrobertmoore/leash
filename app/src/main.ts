@@ -33,6 +33,7 @@ async function replayLoop() {
       if (live) return;
       const wait = Math.max(0, (e.block - first) * 400 - 0);
       await new Promise((r) => setTimeout(r, Math.min(260, wait ? 140 : 60)));
+      if (live) return; // the judge started a live run while we were waiting
       const rail = scene.head || e.block; // replayed events are drawn on today's rail, labelled with their real block
       if (e.kind === "twin") { if (e.ok) scene.twinSent(rail); }
       else if (e.ok) scene.paid(rail); else scene.refused(rail, e.block);
