@@ -1,0 +1,68 @@
+"One row per passkey-owned Leash account."
+type Account {
+  id: ID! # account address
+  passkeyX: String!
+  passkeyY: String!
+  createdAt: Int!
+  createdBlock: BigInt!
+  agentCount: Int!
+  totalPaid: BigInt! # 6-decimal dollars
+  agents: [Agent!]! @derivedFrom(field: "account")
+}
+
+"A leashed agent: its budget, its ERC-8004 identity and its live state."
+type Agent {
+  id: ID! # agent key address
+  account: Account!
+  erc8004Id: BigInt!
+  token: String!
+  dailyCap: BigInt!
+  expiry: BigInt!
+  anySeller: Boolean!
+  revoked: Boolean!
+  revokedAt: Int
+  totalPaid: BigInt!
+  paymentCount: Int!
+  hasBrief: Boolean!
+  briefSize: Int!
+  leashedAt: Int!
+  payments: [Payment!]! @derivedFrom(field: "agent")
+}
+
+"A payment that went through inside a leash. (Refused payments revert, so they never emit an event.)"
+type Payment {
+  id: ID! # txHash-logIndex
+  agent: Agent!
+  seller: Seller!
+  amount: BigInt!
+  ref: String!
+  remainingToday: BigInt!
+  block: BigInt!
+  timestamp: Int!
+  txHash: String!
+}
+
+"Everyone who has been paid by a leashed agent, with what they earned."
+type Seller {
+  id: ID! # seller address
+  totalReceived: BigInt!
+  paymentCount: Int!
+  agentsServed: Int!
+  payments: [Payment!]! @derivedFrom(field: "seller")
+}
+
+"Which seller each agent has paid, so agentsServed counts distinct agents."
+type SellerAgent {
+  id: ID! # seller-agent
+}
+
+"Network totals and per-UTC-day totals. id = 'all' or 'day-<index>'."
+type Stats {
+  id: ID!
+  accounts: Int!
+  agentsLeashed: Int!
+  agentsRevoked: Int!
+  payments: Int!
+  totalPaid: BigInt!
+  briefsSealed: Int!
+}

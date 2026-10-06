@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: leash-indexer
+description: Leash on Monad mainnet. Every passkey account, every leashed agent, every payment, revoke and sealed brief.
+chains:
+  - id: 143 # Monad mainnet
+    start_block: 111059800
+    rpc:
+      - url: https://rpc.monad.xyz
+        initial_block_interval: 100
+        interval_ceiling: 100
+        for: sync
+    contracts:
+      - name: LeashHub
+        abi_file_path: ./abis/LeashHub.json
+        address: "0x64a489074dd6a4b3b977e5f635a178366a8c12c3"
+        events:
+          - event: AccountCreated
+          - event: AgentLinked
+      - name: LeashAccount
+        abi_file_path: ./abis/LeashAccount.json
+        # no address: each passkey account is a clone, registered from LeashHub.AccountCreated
+        events:
+          - event: AgentLeashed
+          - event: Paid
+          - event: Revoked
+          - event: CapChanged
+          - event: SellerSet
+          - event: BriefSealed
