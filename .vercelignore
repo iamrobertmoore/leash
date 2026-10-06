@@ -4,3 +4,4 @@ artifacts
 coverage
 .env*
 deployments/*.env
+indexer

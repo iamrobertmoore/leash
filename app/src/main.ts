@@ -138,4 +138,5 @@ $("b4").onclick = () => busy($("b4") as HTMLButtonElement, $("o4"), async () => 
   $("o4").innerHTML += `<br><button class="link" id="again">Run it again with a fresh agent</button>`;
   $("again").onclick = () => location.reload();
 });
+import("./network").then((m) => m.startNetwork());
 $("foot").textContent = `Hub ${NET.hub} · ${NET.name}`;

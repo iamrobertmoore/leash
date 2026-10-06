@@ -49,6 +49,20 @@
 <span class="k2">const</span> g = <span class="k2">await</span> leashGate(req, { seller: me, priceUsd: <span class="s">"1"</span> });
 <span class="k2">if</span> (!g.allow) <span class="k2">return</span> res.status(g.status).json(g.body); <span class="c">// <span class="n">402</span> / <span class="n">403</span></span></pre>
 </section>
+<section class="net" id="network" hidden>
+ <div class="k ac">Live on Monad · indexed by Envio</div>
+ <div class="nums">
+  <div><b id="nAgents">–</b><span>agents leashed</span></div>
+  <div><b id="nPaid">–</b><span>paid inside leashes</span></div>
+  <div><b id="nPayments">–</b><span>payments</span></div>
+  <div><b id="nRevoked">–</b><span>agents revoked</span></div>
+  <div><b id="nBriefs">–</b><span>briefs sealed</span></div>
+ </div>
+ <div class="netgrid">
+  <div><div class="h">Recent payments</div><ol id="recent"></ol></div>
+  <div><div class="h">Sellers by revenue from leashed agents</div><ol id="sellers2"></ol></div>
+ </div>
+</section>
 <footer><span>Leash · built for Monad Metropolis · MIT</span><span id="foot"></span></footer>
 <script type="module" src="/src/main.ts"></script>
 </body></html>

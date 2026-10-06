@@ -12,6 +12,8 @@
   "exclude": [
     "app",
     "node_modules",
-    "dist"
+    "dist",
+    "indexer",
+    "sdk"
   ]
 }
