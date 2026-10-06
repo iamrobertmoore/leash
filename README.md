@@ -45,7 +45,7 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 | 4 | **One-read seller check** | `LeashHub.check` answers status, remaining budget, expiry and ERC-8004 id in one `eth_call` | [`LeashHub.sol#L55`](contracts/LeashHub.sol#L55), [`sdk/src/index.ts#L50`](sdk/src/index.ts#L50) |
 | 5 | **400 ms blocks** | The live site draws one cell per real Monad block and drops each payment into the block that included it. A 20-attempt attack plays out in about 15 blocks | [`app/src/tether.ts`](app/src/tether.ts) |
 
-**Indexed by Envio.** An [Envio HyperIndex](indexer/) indexer follows the hub on Monad mainnet: every account (clones, registered dynamically from `AccountCreated`), leash, payment, revoke and sealed brief. The site's "Live on Monad" totals and seller leaderboard read it through a cached [`/api/network`](api/network.ts). Public GraphQL: [`indexer.dev.hyperindex.xyz/effeb1d/v1/graphql`](https://indexer.dev.hyperindex.xyz/effeb1d/v1/graphql).
+**Indexed by Envio.** An [Envio HyperIndex](indexer/) indexer follows the hub on Monad mainnet: every account (clones, registered dynamically from `AccountCreated`), leash, payment, revoke and sealed brief. The site's "Live on Monad" totals and seller leaderboard read it through a cached [`/api/network`](api/network.ts), and [`/api/agent?agent=0x…`](api/agent.ts) gives a seller the agent's track record (payments, dollars, distinct sellers, revoked or not) next to the live on-chain check. Public GraphQL: [`indexer.dev.hyperindex.xyz/effeb1d/v1/graphql`](https://indexer.dev.hyperindex.xyz/effeb1d/v1/graphql).
 
 ## How it works
 

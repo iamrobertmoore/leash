@@ -39,6 +39,12 @@ export async function sellerCheck(agent: Address, amountUsd = 1) {
   return { status: r[0], remaining: Number(r[1]) / 1e6, agentId: r[3], account: r[4] };
 }
 
+/** The agent's track record, from the Envio indexer (via /api/agent). Null if the indexer is unreachable. */
+export async function agentHistory(agent: Address) {
+  const r = await fetch(`/api/agent?agent=${agent}`).catch(() => null);
+  return r?.ok ? r.json() : null;
+}
+
 /** Polls receipts; refusals emit no event, so status 0 on our own hash is the only signal. */
 export function watch(hashes: Hex[], on: (i: number, ok: boolean, block: bigint, hash: Hex) => void) {
   const done = new Set<number>();

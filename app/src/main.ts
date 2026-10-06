@@ -2,7 +2,7 @@ import { createScene } from "./tether";
 import { NET, STATUS } from "./config";
 import { createPasskey, demoSigner, passkeySupported, resumePasskey, savedCredentialId, type Signer } from "./passkey";
 import { sealBrief } from "./brief";
-import { setupAccount, leashAgent, runAttack, revokeAgent, sellerCheck, watch, buyForecast, setBrief, type Setup } from "./chain";
+import { setupAccount, leashAgent, runAttack, revokeAgent, sellerCheck, agentHistory, watch, buyForecast, setBrief, type Setup } from "./chain";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const scene = createScene($("scene") as HTMLCanvasElement);
@@ -123,6 +123,7 @@ $("b3").onclick = () => busy($("b3") as HTMLButtonElement, $("o3"), async () => 
   ]);
   const c = await sellerCheck(setup!.agent, 1);
   $("o3").innerHTML += `<br>Seller check now: <b>${STATUS[c.status]}</b> · $${c.remaining.toFixed(2)} left · ERC-8004 #${c.agentId}`;
+  history($("o3"), setup!.agent);
   const again = await buyForecast(setup!).catch((e) => ({ status: 0, error: e.message }));
   if (again.stage === "refused-before-pay") $("o3").innerHTML += `<br>Paid API now: <b class="red">${again.status}</b> · ${again.body.leash.reason} Refused before doing any work.`;
   ($("b4") as HTMLButtonElement).disabled = false; stepOn(5);
@@ -134,9 +135,19 @@ $("b4").onclick = () => busy($("b4") as HTMLButtonElement, $("o4"), async () => 
   scene.revoke();
   const c = await sellerCheck(setup!.agent, 1);
   $("o4").innerHTML = `Revoked in block ${Number(r.block).toLocaleString()} · ${tx(r.hash)}<br>Seller check now: <b class="red">${STATUS[c.status]}</b>`;
+  history($("o4"), setup!.agent);
   steps[4].classList.add("done");
   $("o4").innerHTML += `<br><button class="link" id="again">Run it again with a fresh agent</button>`;
   $("again").onclick = () => location.reload();
 });
+/** What a seller can also see: the agent's track record, indexed by Envio. Appended when it arrives; skipped if the indexer is down. */
+function history(el: HTMLElement, agent: string) {
+  setTimeout(async () => {
+    const h = await agentHistory(agent as any); if (!h?.known) return;
+    const span = document.createElement("span");
+    span.innerHTML = `<br>Track record (Envio): ${h.payments} payments · $${h.paidUsd.toFixed(2)} to ${h.sellersPaid} seller${h.sellersPaid === 1 ? "" : "s"}${h.revoked ? ' · <b class="red">revoked</b>' : ""}`;
+    el.insertBefore(span, el.querySelector("#again")?.previousSibling ?? null);
+  }, 2500);
+}
 import("./network").then((m) => m.startNetwork());
 $("foot").textContent = `Hub ${NET.hub} · ${NET.name}`;
