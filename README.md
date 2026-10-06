@@ -1,34 +1,88 @@
-# Leash
+<p align="center"><img src="docs/demo.gif" alt="A hijacked AI agent tries to drain its wallet 20 times. On a Leash it spends $5, then Monad refuses every further payment, block by block, while an identical agent with no leash loses everything." width="800"></p>
 
-**Spend limits for AI agents, set with your passkey and enforced on Monad.**
+<h1 align="center">Leash</h1>
+<p align="center"><b>Spend limits for AI agents, set with your passkey and enforced on Monad.</b></p>
+<p align="center"><a href="https://leash-monad.vercel.app">Live site (Monad mainnet)</a> · <a href="sdk/README.md">SDK: <code>leash-monad</code></a> · <a href="#verify-it-in-five-minutes">Verify it</a> · <a href="#how-monad-is-used">How Monad is used</a></p>
 
-An AI agent that can spend money is one bad prompt away from emptying its wallet. Leash gives every agent a
-daily budget that the owner's passkey sets and a Monad contract checks on every single payment. Past the limit,
-the chain refuses. Revoke in one tap. And any seller can read an agent's leash in one call before it gets paid.
+---
 
-Live on **Monad mainnet** (chain 143):
+In March 2025 someone got into the dashboard of AIXBT, an AI trading agent, and had it send about 55 ETH, roughly
+$100k, out of its wallet ([The Block](https://www.theblock.co/post/346911/ai-crypto-bot-aixbt-lost-eth-hack-unauthorized-dashboard-access)).
+The agent did exactly what it was told. Nothing between the agent and the money said no.
 
-| What | Address |
+Leash is that "no". I give each agent its own key and a leash: a daily budget, the sellers it may pay, and an expiry.
+My passkey (Face ID or Touch ID) is the only thing that can set or change a leash, and Monad checks it on every
+single payment. Past the limit, the payment reverts on-chain. One tap revokes the agent.
+
+The other half is for sellers. If you run an API that agents pay, one read on Monad tells you whose agent this is,
+what it can still spend today, and whether this payment will go through. No API key and no Leash server in the path.
+
+| Try this | Watch what happens |
 |---|---|
-| LeashHub (accounts + seller check) | `0xecefc8c322e2aa77327c2b4912caec04323f4f37` |
-| LeashAccount implementation | `0xA0699622Fd262787bd7Fa8D3c7dB10C0c2610F8F` |
-| ERC-8004 Identity Registry (Monad's) | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` |
+| [Hijack my own agent](https://leash-monad.vercel.app) | Your passkey creates an account, leashes an agent at $5/day, and 20 drain attempts hit it. 15 or so are refused on-chain while the unleashed twin loses all $20. About 15 seconds |
+| `curl -i https://leash-monad.vercel.app/api/forecast` | A real paid API answers `402` until an agent pays inside its leash |
+| `npm i leash-monad viem` then `checkAgent(agent, me, "2.00")` | `OK`, `OVER_CAP`, `REVOKED`, `EXPIRED` or `UNKNOWN_AGENT`, straight from the chain |
 
-> Work in progress for Monad Metropolis (Trust, Identity & AI track). Full README, demo and SDK docs land this week.
+## Verify it in five minutes
+
+| Claim | How to check |
+|---|---|
+| It's live on Monad mainnet | `LeashHub` [`0xecef…4f37`](https://monadvision.com/address/0xecefc8c322e2aa77327c2b4912caec04323f4f37) on chain 143 |
+| A payment over the cap is refused on-chain | A refused `pay` from a real run: [`0x89a3…2bf0`](https://monadvision.com/tx/0x89a3bc00bc67ef0ab6a7c8e4f0b96ae7b955b3e35165ecaec2367b35e6102bf0) shows "execution reverted" |
+| The passkey is checked by Monad's P256 precompile | `LeashAccount.ownerExecute` → Solady `WebAuthn.verify` → `staticcall` to `0x0100`. Measured 7,282 gas per verification vs 355,149 for a Solidity verifier on the same chain |
+| Every agent is a real ERC-8004 identity | Agents are registered in Monad's Identity Registry `0x8004A169…a432`; the first is #10281 |
+| The contracts do what this README says | `npm i && npx hardhat test` runs 9 tests, with the P256 precompile switched on locally |
+
+## How Monad is used
+
+Remove any one of these and either the mechanism disappears or a real attack opens.
+
+| # | Monad feature | Why it's load-bearing | Where |
+|---|---|---|---|
+| 1 | **P256 precompile at `0x0100`** | The owner is a WebAuthn passkey, not a seed phrase. Every leash change and every revoke is a P-256 signature checked on-chain. At 7,282 gas it's cheap enough to do on every owner action | [`LeashAccount.sol#L111`](contracts/LeashAccount.sol#L111), Solady `P256.sol#L61` |
+| 2 | **ERC-8004 Identity Registry** | Each agent is registered when it's leashed, owned by the passkey account, with the account and agent key in its metadata. "Whose agent is this" has a public answer | [`LeashAccount.sol#L140`](contracts/LeashAccount.sol#L140) |
+| 3 | **Per-call on-chain enforcement** | The check runs inside the payment itself, so a hijacked agent can't skip it. A refused call costs under a cent at Monad's fees | [`LeashAccount.sol#L195`](contracts/LeashAccount.sol#L195) |
+| 4 | **One-read seller check** | `LeashHub.check` answers status, remaining budget, expiry and ERC-8004 id in one `eth_call` | [`LeashHub.sol#L55`](contracts/LeashHub.sol#L55), [`sdk/src/index.ts#L50`](sdk/src/index.ts#L50) |
+| 5 | **400 ms blocks** | The live site draws one cell per real Monad block and drops each payment into the block that included it. A 20-attempt attack plays out in about 15 blocks | [`app/src/tether.ts`](app/src/tether.ts) |
+
+## How it works
+
+```
+ owner passkey ──(WebAuthn, P256 @0x0100)──▶ LeashAccount ──register──▶ ERC-8004 Identity Registry
+                                               │  leash(agent, $/day, sellers, expiry)
+ agent key ──────────── pay(seller, $, ref) ──▶│  checks the leash, then transfers or reverts
+                                               │
+ seller ── leashGate / checkAgent ──▶ LeashHub.check(agent, seller, $) ──▶ OK / OVER_CAP / REVOKED / …
+```
+
+- `contracts/LeashAccount.sol`: one account per passkey. Owner actions arrive with a WebAuthn assertion; anyone can relay them.
+- `contracts/LeashHub.sol`: creates accounts at a deterministic address per passkey and answers the seller's check.
+- `sdk/`: `checkAgent`, `leashGate` (x402-style 402 until paid), `payWithLeash`, `fetchWithLeash`.
+- `app/` + `api/`: the live site and a relayer that pays gas so a judge needs nothing but a passkey.
+
+## Limits
+
+- The demo relayer pays gas and funds demo agents; it only relays leash, revoke, cap and seller changes, and can't move an account's money.
+- The demo spends a test dollar (`tUSD`, 6 decimals) deployed for this, not real USDC. The token is a parameter of each leash.
+- The daily budget resets at 00:00 UTC.
 
 ## Run it
 
 ```bash
 npm install
-npx hardhat test          # contracts, with the P256 precompile enabled locally
-npx vite build            # the site
+npx hardhat test                       # contracts, P256 precompile enabled locally
+npx vite build                         # the site
+cd sdk && npm install && npm run build # the SDK
 ```
 
-## Built with AI tools
+Deployed addresses are in [`deployments/`](deployments).
 
-I built Leash with an AI coding agent (Claude) doing most of the typing, under my direction. Every
-contract, number and claim here was checked against a test or an on-chain transaction.
+## Built during Monad Metropolis, with AI
 
-## Licence
+Everything here was written between 5 and 12 October 2026 for Monad Metropolis; there's no pre-existing code
+apart from the open-source libraries in `package.json` (Solady's WebAuthn and P256, OpenZeppelin, viem).
 
-MIT
+I built Leash with an AI coding agent (Claude) doing most of the typing, under my direction. Every contract,
+number and claim in this README was checked against a test or an on-chain transaction.
+
+MIT licence.
