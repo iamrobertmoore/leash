@@ -5,7 +5,7 @@ import path from "node:path";
 const routes: Record<string, any> = {
   account: require("../api/account").default, owner: require("../api/owner").default,
   attack: require("../api/attack").default, check: require("../api/check").default,
-  buy: require("../api/buy").default, forecast: require("../api/forecast").default,
+  buy: require("../api/buy").default, forecast: require("../api/forecast").default, network: require("../api/network").default,
 };
 const dist = path.join(__dirname, "../dist");
 http.createServer(async (req, res: any) => {
