@@ -2,8 +2,8 @@
 <title>Leash · spend limits for AI agents, enforced on Monad</title>
 <meta name="description" content="Give every AI agent a daily budget your passkey sets and Monad checks on every payment. Sellers can read the leash before they get paid.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index-CTgb66QX.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BJwhfvvW.css">
+  <script type="module" crossorigin src="/assets/index-nwJd6_hF.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DMAMtUSz.css">
 </head><body>
 <div class="fx haze"></div><div class="fx grain"></div><div class="fx scan"></div>
 <section class="hero"><canvas id="scene"></canvas>
@@ -34,13 +34,18 @@
 
 <section class="band" id="sellers">
  <div class="col"><div class="k ac">For sellers</div><h2>One read before you serve an agent.</h2>
-  <p>Any API, site or contract can ask Monad whose agent this is, what it may still spend today, and whether this payment will go through. No API key, no trust in the agent's own word.</p></div>
- <pre class="code" id="sdk"><span class="c">// npm i @leash/sdk</span>
-<span class="k2">import</span> { checkAgent } <span class="k2">from</span> <span class="s">"@leash/sdk"</span>;
+  <p>Any API, site or contract can ask Monad whose agent this is, what it may still spend today, and whether this payment will go through. No API key, no Leash server in the path, no trust in the agent's own word.</p>
+  <p class="try">Try it: <code>curl -i https://leash-monad.vercel.app/api/forecast</code> answers <b>402</b> until an agent pays inside its leash.</p></div>
+ <pre class="code" id="sdk"><span class="c">// npm i leash-monad viem</span>
+<span class="k2">import</span> { checkAgent, leashGate } <span class="k2">from</span> <span class="s">"leash-monad"</span>;
 
-<span class="k2">const</span> v = <span class="k2">await</span> checkAgent(agentAddress, myAddress, <span class="s">"2.00"</span>);
-<span class="k2">if</span> (v.status !== <span class="s">"OK"</span>) <span class="k2">return</span> res.status(<span class="n">402</span>).json(v);
-<span class="c">// v = { status: "OVER_CAP", remainingToday: "0.00", owner: "0x…", erc8004Id: 10281 }</span></pre>
+<span class="c">// one read, before any work</span>
+<span class="k2">const</span> v = <span class="k2">await</span> checkAgent(agent, me, <span class="s">"2.00"</span>);
+<span class="c">// { status: "OVER_CAP", remainingToday: "0.0", erc8004Id: "10281", ... }</span>
+
+<span class="c">// or the whole x402-style flow as middleware</span>
+<span class="k2">const</span> g = <span class="k2">await</span> leashGate(req, { seller: me, priceUsd: <span class="s">"1"</span> });
+<span class="k2">if</span> (!g.allow) <span class="k2">return</span> res.status(g.status).json(g.body); <span class="c">// <span class="n">402</span> / <span class="n">403</span></span></pre>
 </section>
 <footer><span>Leash · built for Monad Metropolis · MIT</span><span id="foot"></span></footer>
 </body></html>
