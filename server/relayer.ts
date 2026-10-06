@@ -25,15 +25,23 @@ export function demoKeys(account: Address, idx = 0) {
 
 const wait = (h: Hex) => pub.waitForTransactionReceipt({ hash: h, timeout: 30_000 });
 
-/** Several judges can hit the relayer at once from different serverless instances, so nonces can collide.
- *  Retry a relayer send a few times with jitter when the node rejects it. */
-async function retrying<T>(fn: () => Promise<T>): Promise<T> {
+/** Several judges can hit the relayer at once from different serverless instances, so relayer nonces collide.
+ *  Every relayer transaction goes through here: pick the pending nonce, send, wait briefly; if the node says another
+ *  tx won that nonce, or ours vanished, take a fresh nonce and send again. */
+async function relay(send: (nonce: number) => Promise<Hex>) {
+  const me = relayer().address;
   for (let i = 0; ; i++) {
-    try { return await fn(); }
-    catch (e: any) {
-      const msg = String(e?.details ?? e?.shortMessage ?? e?.message ?? "");
-      if (i >= 3 || !/nonce|invalid parameters|replacement|already known|underpriced/i.test(msg)) throw e;
-      await new Promise((r) => setTimeout(r, 400 + Math.random() * 900));
+    const nonce = await pub.getTransactionCount({ address: me, blockTag: "pending" });
+    let hash: Hex | undefined;
+    try {
+      hash = await send(nonce);
+      return await pub.waitForTransactionReceipt({ hash, timeout: 15_000 });
+    } catch (e: any) {
+      const msg = `${e?.details ?? ""} ${e?.shortMessage ?? e?.message ?? ""}`;
+      const collided = /nonce|priority|replacement|already known|underpriced|invalid parameters/i.test(msg);
+      const vanished = /Timed out/i.test(msg) && hash && !(await pub.getTransaction({ hash }).catch(() => null));
+      if (i >= 5 || !(collided || vanished)) throw e;
+      await sleep(300 + Math.random() * 1200);
     }
   }
 }
@@ -44,8 +52,8 @@ export async function createAccount(x: Hex, y: Hex) {
   const code = await pub.getCode({ address: account });
   if (!code || code === "0x") {
     const w = wallet();
-    await wait(await retrying(() => w.writeContract({ address: NET.hub, abi: hubAbi, functionName: "createAccount", args: [x, y] })));
-    await wait(await retrying(() => w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [account, usd(DEMO.accountFundUsd)] })));
+    await relay((nonce) => w.writeContract({ address: NET.hub, abi: hubAbi, functionName: "createAccount", args: [x, y], nonce }));
+    await relay((nonce) => w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [account, usd(DEMO.accountFundUsd)], nonce }));
   }
   return account;
 }
@@ -67,7 +75,7 @@ export async function prepareAgents(account: Address) {
   await fund(twin.address, parseEther(DEMO.twinGasMon));
   const tb = await pub.readContract({ address: NET.token, abi: erc20Abi, functionName: "balanceOf", args: [twin.address] });
   if (tb < usd(DEMO.twinFundUsd)) {
-    await wait(await retrying(() => w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [twin.address, usd(DEMO.twinFundUsd) - tb] })));
+    await relay((nonce) => w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [twin.address, usd(DEMO.twinFundUsd) - tb], nonce }));
   }
   return { agent: agent.address, twin: twin.address, token: NET.token, attacker: DEMO.attacker };
 }
@@ -77,7 +85,7 @@ async function fund(to: Address, target: bigint) {
   for (let i = 0; i < 4; i++) {
     const bal = await pub.getBalance({ address: to });
     if (bal >= (target * 8n) / 10n) return;
-    const r = await wait(await retrying(() => wallet().sendTransaction({ to, value: target - bal })));
+    const r = await relay((nonce) => wallet().sendTransaction({ to, value: target - bal, nonce }));
     if (r.status === "success") return;
     await sleep(1600);
   }
@@ -95,9 +103,8 @@ export async function submitOwner(account: Address, op: Hex, auth: {
   if (!isAccount) throw new Error("not a Leash account");
   const a = { ...auth, challengeIndex: BigInt(auth.challengeIndex), typeIndex: BigInt(auth.typeIndex) };
   const gas = await pub.estimateContractGas({ address: account, abi: accountAbi, functionName: "ownerExecute", args: [op, a], account: relayer() });
-  const hash = await retrying(() => wallet().writeContract({ address: account, abi: accountAbi, functionName: "ownerExecute", args: [op, a], gas: (gas * 12n) / 10n }));
-  const r = await wait(hash);
-  return { hash, status: r.status, block: r.blockNumber.toString(), fn };
+  const r = await relay((nonce) => wallet().writeContract({ address: account, abi: accountAbi, functionName: "ownerExecute", args: [op, a], gas: (gas * 12n) / 10n, nonce }));
+  return { hash: r.transactionHash, status: r.status, block: r.blockNumber.toString(), fn };
 }
 
 /** The hijack: the same 20 x $1 drain script against the leashed agent and its unleashed twin. Returns hashes at once. */
