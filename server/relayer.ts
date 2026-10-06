@@ -16,9 +16,10 @@ const relayer = () => privateKeyToAccount(env("RELAYER_KEY") as Hex);
 const wallet = (acct = relayer()) => createWalletClient({ account: acct, chain: NET.chain, transport: http() });
 
 /** Demo agent and its unleashed twin are derived from a server secret, so nothing is stored. */
-export function demoKeys(account: Address) {
+export function demoKeys(account: Address, idx = 0) {
   const seed = env("AGENT_SEED");
-  const k = (tag: string) => keccak256(encodePacked(["string", "address", "string"], [seed, account, tag]));
+  // index 0 keeps the original derivation; each later run gets a fresh agent and twin
+  const k = (tag: string) => keccak256(encodePacked(["string", "address", "string"], [seed, account, idx ? `${tag}-${idx}` : tag]));
   return { agent: privateKeyToAccount(k("agent")), twin: privateKeyToAccount(k("twin")) };
 }
 
@@ -37,8 +38,17 @@ export async function createAccount(x: Hex, y: Hex) {
 }
 
 /** Fund the demo agent (gas) and its twin (gas + $20) ahead of the attack. */
+/** How many agents this account has leashed so far (0 for a brand-new account). */
+async function agentCount(account: Address) {
+  const code = await pub.getCode({ address: account });
+  if (!code || code === "0x") return 0;
+  const list = await pub.readContract({ address: account, abi: accountAbi, functionName: "agents" });
+  return list.length;
+}
+
 export async function prepareAgents(account: Address) {
-  const { agent, twin } = demoKeys(account);
+  const idx = await agentCount(account); // a fresh agent for every run, so the same passkey can demo again
+  const { agent, twin } = demoKeys(account, idx);
   const w = wallet();
   await fund(agent.address, parseEther(DEMO.agentGasMon));
   await fund(twin.address, parseEther(DEMO.twinGasMon));
@@ -79,7 +89,9 @@ export async function submitOwner(account: Address, op: Hex, auth: {
 
 /** The hijack: the same 20 x $1 drain script against the leashed agent and its unleashed twin. Returns hashes at once. */
 export async function attack(account: Address) {
-  const { agent, twin } = demoKeys(account);
+  const n = await agentCount(account);
+  if (n === 0) throw new Error("agent is not leashed yet");
+  const { agent, twin } = demoKeys(account, n - 1);
   const l = await pub.readContract({ address: account, abi: accountAbi, functionName: "leashes", args: [agent.address] });
   if (l[0] === "0x0000000000000000000000000000000000000000") throw new Error("agent is not leashed yet");
   const gasPrice = await pub.getGasPrice();

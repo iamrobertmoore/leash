@@ -18,6 +18,7 @@ export const accountAbi = parseAbi([
   "function leashes(address) view returns (address token, uint128 dailyCap, uint128 spentToday, uint64 day, uint64 expiry, uint64 agentId, bool active, bool anySeller)",
   "function check(address agent, address seller, uint256 amount) view returns (uint8, uint256, uint64, uint256)",
   "function ownerX() view returns (bytes32)",
+  "function agents() view returns (address[])",
   "event Paid(address indexed agent, address indexed seller, address token, uint256 amount, bytes32 ref, uint256 remainingToday)",
 ]);
 export const erc20Abi = parseAbi([

@@ -47,7 +47,7 @@ replayLoop();
 // ---------- the judge flow, live on chain
 let signer: Signer | null = null, setup: Setup | null = null;
 const steps = [...document.querySelectorAll<HTMLLIElement>("#steps li")];
-const stepOn = (n: number) => steps.forEach((li, i) => { li.classList.toggle("on", i === n - 1); if (i < n - 1) li.classList.add("done"); });
+const stepOn = (n: number) => { steps.forEach((li, i) => { li.classList.toggle("on", i === n - 1); if (i < n - 1) li.classList.add("done"); }); steps[n - 1]?.scrollIntoView({ behavior: "smooth", block: "nearest" }); };
 async function busy(btn: HTMLButtonElement, out: HTMLElement, fn: () => Promise<void>) {
   btn.disabled = true; btn.classList.add("busy"); const t = btn.textContent; btn.textContent = "Working…";
   try { await fn(); btn.textContent = "Done"; }
@@ -84,10 +84,11 @@ $("b3").onclick = () => busy($("b3") as HTMLButtonElement, $("o3"), async () => 
   scene.reset(); stats(); $("o3").innerHTML = "Sending 40 transactions…";
   const a = await runAttack(setup!);
   let paid = 0, refused = 0, twin = 0; const firstRefusal: string[] = [];
+  const show = () => ($("o3").innerHTML = `Leashed agent: ${paid} paid, ${refused} refused on-chain${firstRefusal.length ? ` · first refusal ${tx(firstRefusal[0])}` : ""}<br>Unleashed twin: $${twin} of $20 drained`);
   await Promise.all([
     watch(a.leashed, (_i, ok, block, h) => { if (ok) { paid++; enqueue(() => scene.paid(Number(block))); } else { refused++; enqueue(() => scene.refused(Number(block))); if (!firstRefusal.length) firstRefusal.push(h); }
-      $("o3").innerHTML = `Leashed agent: ${paid} paid, ${refused} refused on-chain${firstRefusal.length ? ` · first refusal ${tx(firstRefusal[0])}` : ""}<br>Unleashed twin: ${twin} of 20 drained`; }),
-    watch(a.unleashed, (_i, ok, block) => { if (ok) { twin++; enqueue(() => scene.twinSent(Number(block))); } }),
+      show(); }),
+    watch(a.unleashed, (_i, ok, block) => { if (ok) { twin++; enqueue(() => scene.twinSent(Number(block))); } show(); }),
   ]);
   const c = await sellerCheck(setup!.agent, 1);
   $("o3").innerHTML += `<br>Seller check now: <b>${STATUS[c.status]}</b> · $${c.remaining.toFixed(2)} left · ERC-8004 #${c.agentId}`;
@@ -101,5 +102,7 @@ $("b4").onclick = () => busy($("b4") as HTMLButtonElement, $("o4"), async () => 
   const c = await sellerCheck(setup!.agent, 1);
   $("o4").innerHTML = `Revoked in block ${Number(r.block).toLocaleString()} · ${tx(r.hash)}<br>Seller check now: <b class="red">${STATUS[c.status]}</b>`;
   steps[3].classList.add("done");
+  $("o4").innerHTML += `<br><button class="link" id="again">Run it again with a fresh agent</button>`;
+  $("again").onclick = () => location.reload();
 });
 $("foot").textContent = `Hub ${NET.hub} · ${NET.name}`;
