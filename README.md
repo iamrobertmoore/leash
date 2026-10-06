@@ -79,12 +79,12 @@ cd sdk && npm install && npm run build # the SDK
 
 Deployed addresses are in [`deployments/`](deployments).
 
-## Built during Monad Metropolis, with AI
+## Built during Monad Metropolis
 
 Everything here was written between 5 and 12 October 2026 for Monad Metropolis; there's no pre-existing code
 apart from the open-source libraries in `package.json` (Solady's WebAuthn and P256, OpenZeppelin, viem).
 
-I built Leash with an AI coding agent (Claude) doing most of the typing, under my direction. Every contract,
-number and claim in this README was checked against a test or an on-chain transaction.
+Built with AI coding tools (Claude), as the hackathon rules allow. Every contract, number and claim in this
+README was checked against a test or an on-chain transaction.
 
 MIT licence.
