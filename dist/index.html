@@ -2,7 +2,7 @@
 <title>Leash · spend limits for AI agents, enforced on Monad</title>
 <meta name="description" content="Give every AI agent a daily budget your passkey sets and Monad checks on every payment. Sellers can read the leash before they get paid.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index-DlIE7fuH.js"></script>
+  <script type="module" crossorigin src="/assets/index-CTgb66QX.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-BJwhfvvW.css">
 </head><body>
 <div class="fx haze"></div><div class="fx grain"></div><div class="fx scan"></div>
@@ -22,9 +22,11 @@
      <button class="sbtn" id="b1">Create passkey</button> <button class="link" id="b1demo">No passkey? Use a demo key</button><div class="out" id="o1"></div></li>
    <li data-s="2"><div class="t">Put your agent on a $5/day leash</div><div class="d">Signed by your passkey, verified on-chain by Monad's P256 precompile. Registers the agent under ERC-8004.</div>
      <button class="sbtn" id="b2" disabled>Sign the leash</button><div class="out" id="o2"></div></li>
-   <li data-s="3"><div class="t">Hijack it</div><div class="d">20 drain attempts of $1, from the leashed agent and from an identical agent with no leash.</div>
+   <li data-s="3"><div class="t">Let it work</div><div class="d">Your agent buys a $1 forecast from a real paid API. The API answers 402, checks the leash, the agent pays inside it, and the API serves.</div>
+     <button class="sbtn" id="bBuy" disabled>Buy a forecast</button><div class="out" id="oBuy"></div></li>
+   <li data-s="4"><div class="t">Hijack it</div><div class="d">20 drain attempts of $1, from the leashed agent and from an identical agent with no leash.</div>
      <button class="sbtn red" id="b3" disabled>Run the attack</button><div class="out" id="o3"></div></li>
-   <li data-s="4"><div class="t">Revoke in one tap</div><div class="d">Then ask what a seller sees.</div>
+   <li data-s="5"><div class="t">Revoke in one tap</div><div class="d">Then ask what a seller sees.</div>
      <button class="sbtn" id="b4" disabled>Revoke agent</button><div class="out" id="o4"></div></li>
   </ol>
  </aside>

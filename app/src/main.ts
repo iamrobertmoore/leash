@@ -1,7 +1,7 @@
 import { createScene } from "./tether";
 import { NET, STATUS } from "./config";
 import { createPasskey, demoSigner, passkeySupported, resumePasskey, type Signer } from "./passkey";
-import { setupAccount, leashAgent, runAttack, revokeAgent, sellerCheck, watch, type Setup } from "./chain";
+import { setupAccount, leashAgent, runAttack, revokeAgent, sellerCheck, watch, buyForecast, type Setup } from "./chain";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const scene = createScene($("scene") as HTMLCanvasElement);
@@ -82,11 +82,26 @@ $("b2").onclick = () => busy($("b2") as HTMLButtonElement, $("o2"), async () => 
   $("o2").innerHTML = "Sign with your passkey…";
   const r = await leashAgent(signer!, setup!);
   $("o2").innerHTML = `Leashed: $5.00/day, 7 days. Verified on-chain in block ${Number(r.block).toLocaleString()} · ${tx(r.hash)}`;
-  ($("b3") as HTMLButtonElement).disabled = false; stepOn(3);
+  ($("bBuy") as HTMLButtonElement).disabled = false; stepOn(3);
+});
+
+let bought = 0;
+$("bBuy").onclick = () => busy($("bBuy") as HTMLButtonElement, $("oBuy"), async () => {
+  $("oBuy").innerHTML = "GET /api/forecast …";
+  const r = await buyForecast(setup!);
+  if (r.stage !== "served") throw new Error(`Seller answered ${r.status}: ${r.body?.leash?.reason ?? r.error ?? r.body?.error}`);
+  bought++; scene.paid(scene.head);
+  stats();
+  $("oBuy").innerHTML = `402 Payment Required · leash ${r.first.leash.status}, $${Number(r.first.leash.remainingToday).toFixed(2)} left<br>`
+    + `Paid $${r.body.paid} inside the leash · ${tx(r.tx)}<br>200 OK · Monad block ${Number(r.body.forecast.block).toLocaleString()}, gas ${r.body.forecast.gasPriceGwei} gwei`
+    + `<br>Bought ${bought} · <button class="link" id="again1">buy another</button>`;
+  $("again1").onclick = () => $("bBuy").click();
+  ($("bBuy") as HTMLButtonElement).disabled = false; $("bBuy").textContent = "Buy a forecast";
+  ($("b3") as HTMLButtonElement).disabled = false; stepOn(4);
 });
 
 $("b3").onclick = () => busy($("b3") as HTMLButtonElement, $("o3"), async () => {
-  scene.reset(); stats(); $("o3").innerHTML = "Sending 40 transactions…";
+  scene.resetAttack(); stats(); $("o3").innerHTML = "Sending 40 transactions…";
   const a = await runAttack(setup!);
   let paid = 0, refused = 0, twin = 0; const firstRefusal: string[] = [];
   const show = () => ($("o3").innerHTML = `Leashed agent: ${paid} paid, ${refused} refused on-chain${firstRefusal.length ? ` · first refusal ${tx(firstRefusal[0])}` : ""}<br>Unleashed twin: $${twin} of $20 drained`);
@@ -97,7 +112,9 @@ $("b3").onclick = () => busy($("b3") as HTMLButtonElement, $("o3"), async () => 
   ]);
   const c = await sellerCheck(setup!.agent, 1);
   $("o3").innerHTML += `<br>Seller check now: <b>${STATUS[c.status]}</b> · $${c.remaining.toFixed(2)} left · ERC-8004 #${c.agentId}`;
-  ($("b4") as HTMLButtonElement).disabled = false; stepOn(4);
+  const again = await buyForecast(setup!).catch((e) => ({ status: 0, error: e.message }));
+  if (again.stage === "refused-before-pay") $("o3").innerHTML += `<br>Paid API now: <b class="red">${again.status}</b> · ${again.body.leash.reason} Refused before doing any work.`;
+  ($("b4") as HTMLButtonElement).disabled = false; stepOn(5);
 });
 
 $("b4").onclick = () => busy($("b4") as HTMLButtonElement, $("o4"), async () => {
@@ -106,7 +123,7 @@ $("b4").onclick = () => busy($("b4") as HTMLButtonElement, $("o4"), async () => 
   scene.revoke();
   const c = await sellerCheck(setup!.agent, 1);
   $("o4").innerHTML = `Revoked in block ${Number(r.block).toLocaleString()} · ${tx(r.hash)}<br>Seller check now: <b class="red">${STATUS[c.status]}</b>`;
-  steps[3].classList.add("done");
+  steps[4].classList.add("done");
   $("o4").innerHTML += `<br><button class="link" id="again">Run it again with a fresh agent</button>`;
   $("again").onclick = () => location.reload();
 });

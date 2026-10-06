@@ -130,6 +130,7 @@ export function createScene(cv: HTMLCanvasElement) {
     setLabel(s: string) { label = s; },
     onBlock(fn: (n: number) => void) { onBlock = fn; },
     get head() { return head; },
+    resetAttack() { twinBal = 20; refusedCount = 0; twinX = anchor.x; },
     reset(c = 5) { cap = c; spent = 0; twinBal = 20; refusedCount = 0; revoked = false; twinX = anchor.x; },
     paid(block: number, usd = 1) { spent = Math.min(cap, spent + usd); coins.push({ t: 0 }); addBlock(block).ok++; },
     refused(block: number, label?: number) {

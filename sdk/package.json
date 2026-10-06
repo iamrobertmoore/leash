@@ -1,0 +1,48 @@
+{
+  "name": "leash-monad",
+  "version": "0.1.0",
+  "description": "Spend limits for AI agents on Monad. One call tells a seller whose agent it is, what it may spend today, and whether a payment will go through.",
+  "license": "MIT",
+  "author": "Robert Moore",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iamrobertmoore/leash",
+    "directory": "sdk"
+  },
+  "homepage": "https://leash-monad.vercel.app",
+  "keywords": [
+    "monad",
+    "ai-agents",
+    "erc-8004",
+    "x402",
+    "passkey",
+    "spend-limits",
+    "agent-payments"
+  ],
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=esm --platform=neutral --external:viem --outfile=dist/index.mjs && esbuild src/index.ts --bundle --format=cjs --platform=node --external:viem --outfile=dist/index.cjs && tsc -p . --emitDeclarationOnly",
+    "test": "node --test dist/test/*.test.js"
+  },
+  "peerDependencies": {
+    "viem": "^2.20.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "viem": "^2.20.0",
+    "esbuild": "^0.21.0"
+  },
+  "module": "./dist/index.mjs"
+}
