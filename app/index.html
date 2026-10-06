@@ -20,7 +20,10 @@
    <li data-s="1"><div class="t">Create your passkey</div><div class="d">Face ID, Touch ID or Windows Hello. Becomes your Leash account on Monad.</div>
      <button class="sbtn" id="b1">Create passkey</button> <button class="link" id="b1demo">No passkey? Use a demo key</button><div class="out" id="o1"></div></li>
    <li data-s="2"><div class="t">Put your agent on a $5/day leash</div><div class="d">Signed by your passkey, verified on-chain by Monad's P256 precompile. Registers the agent under ERC-8004.</div>
-     <button class="sbtn" id="b2" disabled>Sign the leash</button><div class="out" id="o2"></div></li>
+     <button class="sbtn" id="b2" disabled>Sign the leash</button><div class="out" id="o2"></div>
+     <div class="brief" id="briefBox" hidden><div class="bt">Optional · seal a private brief <span>one passkey, many keys</span></div>
+      <textarea id="briefText" rows="2" maxlength="300">Only buy Monad forecasts. Never pay anyone else. Stop at $5 a day.</textarea>
+      <button class="sbtn" id="bBrief">Seal with my passkey</button><div class="out" id="oBrief"></div></div></li>
    <li data-s="3"><div class="t">Let it work</div><div class="d">Your agent buys a $1 forecast from a real paid API. The API answers 402, checks the leash, the agent pays inside it, and the API serves.</div>
      <button class="sbtn" id="bBuy" disabled>Buy a forecast</button><div class="out" id="oBuy"></div></li>
    <li data-s="4"><div class="t">Hijack it</div><div class="d">20 drain attempts of $1, from the leashed agent and from an identical agent with no leash.</div>

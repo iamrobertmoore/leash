@@ -1,249 +1,249 @@
 {
  "chainId": 143,
- "account": "0xDB8fe9aFE16616a3124E376Ba2bd5322aac8A1B1",
- "agent": "0xCD590C78Ef0a0119675e67C14bf09C3fACa5B8E8",
- "twin": "0x33A2F326a8E6C312335d1bcED200b5d32A26b58F",
- "recorded": "2026-10-06T10:33:05.564Z",
+ "account": "0x3c67f00C134E0125AB7A0169Db758c3fcb08E5E0",
+ "agent": "0x4dEf11e55a97F6Ef15577f96A89b283acDd20970",
+ "twin": "0x32147275A0B111e8daed2084248F1709a3acF1dE",
+ "recorded": "2026-10-06T14:20:38.095Z",
  "events": [
   {
    "kind": "leashed",
    "ok": true,
-   "block": 111015235,
-   "hash": "0x50955b999176116aabf71130d3c57c58bf34665bd833856b516435c4e51b407c"
+   "block": 111060279,
+   "hash": "0x75a25aee24dd6046669fae99e575b238f71e5b8fb8a71321b7484a5db94a43c4"
+  },
+  {
+   "kind": "twin",
+   "ok": true,
+   "block": 111060280,
+   "hash": "0x60c3c36309cbc611b185db2d29e7469b21dd9572846981bf99da8d511a6dc3db"
   },
   {
    "kind": "leashed",
    "ok": true,
-   "block": 111015236,
-   "hash": "0x81a43ae59620890079c73415a7065efbc98dbfc4cfc8195b8465f3024f2495fe"
+   "block": 111060281,
+   "hash": "0x316e71e1ccfd5fd31b7886dcc70b1a987c503347c6a3a2e007db88b32ab2d969"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015236,
-   "hash": "0x91c594f37b5232eb86ab770cd0803e810234cefd272159b181c2edcf65930788"
-  },
-  {
-   "kind": "twin",
-   "ok": true,
-   "block": 111015236,
-   "hash": "0xf6313e1e7b671f0c519b8344a1f05df4e9ec39cb37b9d0e346bbd5a832dc1dcc"
+   "block": 111060281,
+   "hash": "0x3dd6a9361f7d9e74f8cdf96eee6f8cb1ca62b5e709fac2ad60bbbcbd4a319b4c"
   },
   {
    "kind": "leashed",
    "ok": true,
-   "block": 111015237,
-   "hash": "0xa49dddf97016d7dceb821b1a987f0a18b3ec9f04d098fa0fa24ec0a09f1a464f"
-  },
-  {
-   "kind": "twin",
-   "ok": true,
-   "block": 111015237,
-   "hash": "0x51aad5f6bd699846445e9a8098d6bd81d4b055e86a7e575f7e4f860d036da852"
+   "block": 111060282,
+   "hash": "0x052a0b5fe7777a1f42daeacb3166532f15daa96837fa91e1e9ff59d83b7a778c"
   },
   {
    "kind": "leashed",
    "ok": true,
-   "block": 111015238,
-   "hash": "0x566ab07a45ca58b92cb250488ac00594421549b2be45fc535834d688ca75d889"
+   "block": 111060282,
+   "hash": "0xb4f8a0164d96d2ec82df5c7f360d2bd32197032daea53165fafe9901daf9e6ac"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015238,
-   "hash": "0xd56c268349924071783b11e01333d7d93dc01ba7cc89ea183b169db349b97e24"
+   "block": 111060282,
+   "hash": "0x9e6bcde3e3f93698c6c57c7a12c8e51adb264f9ee9734cd02a73ce6c6b6bedc2"
+  },
+  {
+   "kind": "twin",
+   "ok": true,
+   "block": 111060282,
+   "hash": "0x641052821a4e023aee91ed18208c7c42c5681081f7d56675047a9dc5474a7f2a"
   },
   {
    "kind": "leashed",
    "ok": true,
-   "block": 111015239,
-   "hash": "0xb7631865d21f9caab34c665834e0121db8e69dc988dc9af188210f9c4fb4672b"
-  },
-  {
-   "kind": "leashed",
-   "ok": false,
-   "block": 111015239,
-   "hash": "0x1611a307df7a47936e38dd0e6dfd5dea998a0a998292647d6d08b4c255cd2d09"
+   "block": 111060283,
+   "hash": "0x35662abbe396a0352f974976f952e4b29aaa2537840cfb114ba7a0d7d09d54ba"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015239,
-   "hash": "0x5b35747ef414ecefbde23ea279565d2f4d614c282d18347bd4fd370e3d783438"
-  },
-  {
-   "kind": "twin",
-   "ok": true,
-   "block": 111015239,
-   "hash": "0x1e0f52af951d060e0a8133dce10a5070d670ce68fd12e16aadf4b3bd994c8bb4"
+   "block": 111060283,
+   "hash": "0xf012ce0c042b6bc34f3eb725dba24dee6b1fc2b2e245ac89286c100632a54219"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015240,
-   "hash": "0xea4dfe64acf2f9d467489c50aadc715b35aa6cf8aba066ddcde6925de62f0f27"
+   "block": 111060284,
+   "hash": "0x2e0dac78574c14ee6c3a193f7b289dfb92c341574a48ade4b3ed636533642f6f"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015240,
-   "hash": "0x5474ddd51e6080fbafbe9e9349af9e9ecf7c38b4ea6f11a489e8a6d2508d6dc0"
+   "block": 111060284,
+   "hash": "0x20cd7abfe8dc7edd8d62a14c2ff5be8946257f91c01ffde56930cd67d083a3a6"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015241,
-   "hash": "0x61ea8ff416cd55226d1b40948524f51c286e1d833238d0c9cc471de1a3ce3dd2"
+   "block": 111060285,
+   "hash": "0x0fffe267ce405fdb2f867d9080f84faf96590359ddfc97b4dcbf2c4ba3f6db58"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015241,
-   "hash": "0xf250238cbd84c316928933828ee8752c03b7590dfbf855c27a130578c793e72e"
+   "block": 111060285,
+   "hash": "0xe95fc2beacce782d43958b82d1d45226ee3eb240c87ec94aa854271d1e744308"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015241,
-   "hash": "0x87ab9ec7e363748c04ef4d5e400439b1f03ac89c4f5547ae6da763cb4e6e3e5b"
+   "block": 111060285,
+   "hash": "0x6969ea3d21325dc6ed98b71e61d5263af7b952e269f7e69d3c5183f8b5c2c335"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015241,
-   "hash": "0xb685012fdbd42ee11f950a8af633abc52ba2f98fa6a8e1ce700f892acbb657bc"
+   "block": 111060285,
+   "hash": "0xfdb94458246882ac46f323f777846f7cead458941a5c3fb1f579fead456fa51b"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015242,
-   "hash": "0x4c55770eb880d9dad71ecc7d8695e3c5122bf4441d28dc0f6699b78668d051e8"
+   "block": 111060286,
+   "hash": "0x6e37f05791984483562145f828f26fda0dd7b53ff49abebd8a4fa9fd869bdaca"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015242,
-   "hash": "0x30374b5539ad3da8d8b69d84686f6c85f96fff1b9e43a34a3cadd40751071abe"
+   "block": 111060286,
+   "hash": "0x56a5a952de4d6b7640d34965ab56e90fcd2a10e014a2b58e2da1043ddeeda751"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015243,
-   "hash": "0x7f34ba8ec3259e71349bd0e3ec0e6428c75619cd3847d9eafb58b30c6b80ab53"
+   "block": 111060287,
+   "hash": "0x0495d24778b614df61ad66a841c20cc96455df7699fb560686ad911670aad889"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015243,
-   "hash": "0xf2fc07d5c3a04788e370041bad876a875e8fe6f4faff87a6f73984bb21ad964b"
+   "block": 111060287,
+   "hash": "0xa1d8ff9ca45fd6297d4ab78b49218b281cae149ff1493d1ac7036d2e917c24a9"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015244,
-   "hash": "0x2eb12c3d6eb2138c2810ddaa9672404cfa09437d852c894d6ba7f7113a1f0c87"
+   "block": 111060288,
+   "hash": "0x81b23365fd1566fd41ee9036afd5862c0518ba7841f752cee5f93c456591ed8e"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015244,
-   "hash": "0x34dbeccd0facaa94b429de86f0a8fb117f75965cc3c9574ea9b6064d4b86f33e"
+   "block": 111060288,
+   "hash": "0x5f948c72b3434801d316af8e2bc065abd192270d51ceceb054bdce8fd485fec1"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015244,
-   "hash": "0x0b4848b9279b32d95c89089bdc3086ce6837d3edc90e0a0060fd18766e2a4a35"
+   "block": 111060288,
+   "hash": "0x736e53df4d68c0c811f1aa14fd88e7a5127da3be74d9706805f219a5da516c9b"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015244,
-   "hash": "0x8e51db139974542c2e50a2cb622a3bffe8ae007918674e4fb507709d8fc0243e"
+   "block": 111060288,
+   "hash": "0xab46c3fc1e3a1d02daa718af68f2e1c5706d90bca6173f0e41dd02e2c5bcfafe"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015245,
-   "hash": "0x891106a94c0fc69748bf4c1d681201bfcd9906d57285eb52ff3f7dbcdde2a6eb"
+   "block": 111060289,
+   "hash": "0xdc5b778ad92e218b0770f7f20eadb1727bd09d2aa933ad173692541a00274365"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015245,
-   "hash": "0x029af77ebcf540523bafe1e56054cb698290c475c0d591316a4839f3a42c1913"
+   "block": 111060289,
+   "hash": "0x872f2155809743637e6ab0e13d4de26f659d2bb2ed9bbd2c7208646e4f11d59a"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015246,
-   "hash": "0x03c95074150d5440f4a9b057e114a35910a16786de977c994f91cb621334186b"
+   "block": 111060290,
+   "hash": "0xbe2e7fe2b644888cc59bff2c6b96340fec4f6c086c06f1a4e84796301ef27a4b"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015246,
-   "hash": "0xae9288e3af974899633a80f29de5c6ee7b067aa43a195ca1f0abcf83c3d66b95"
+   "block": 111060290,
+   "hash": "0xa4845dfad9933dd86aea3ce69ac64d4c1e83b0696d184a09c4b20ab1356a3b29"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015246,
-   "hash": "0xeb8a580b00abf00b15cb1827e91f9ac44fae10591d8edaafc2afad68f263e0e8"
+   "block": 111060290,
+   "hash": "0xceb50bc12da7e7573e8cd5591560fc248aeef92ef06d1ba017bc3b4ef3d0f94c"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015246,
-   "hash": "0xf52a4174e16e86900a2998e1bb02454ea2c7aa83e4326519effddb9b23f852af"
+   "block": 111060290,
+   "hash": "0x1f2bad5b744cc4b6e80efc2ae29c2ee03329c8e7218a9df8621b1b356accaab8"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015247,
-   "hash": "0x57e77953adeec53ad22c2c6279efc37ca31083ff8e09b0be2692b52a33b174cf"
+   "block": 111060291,
+   "hash": "0x320a7277dfc07598ca96df5a30fb36403c7f1ffa7f8129bb446b24632a536749"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015247,
-   "hash": "0xedc4c5d22b6d9a99891943763a4320144cc7cb12ce8fb46f2002dc7b680f4963"
+   "block": 111060291,
+   "hash": "0x02314e7a3fbb2cac8fa8fa10a86b54b5f193be11b90e9093bd70ded1ecfcc0fd"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015248,
-   "hash": "0x2ffd57c5f2ed280e2f3fa97b7c94229f375b97706923f5eaa05e51f7715e9144"
+   "block": 111060292,
+   "hash": "0x69093d57400f831cc8b08b4a394a63680c2840774c3efb672eed878ce21cf6b5"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015248,
-   "hash": "0x34dd58672e64c429bb81998bdcb245e629c97cfc35ac8528cd4287cb164fdda8"
+   "block": 111060292,
+   "hash": "0xc371147fdf87f2f0caeaeb0597aad300002a9cb79a6e8a8f5763d76d1ac3aed9"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015248,
-   "hash": "0x08d29475c8e8b0d4008441611fb198c9e979e3ef09596a7890cbfef571bf0a9b"
+   "block": 111060292,
+   "hash": "0xbae2d814f39cd54f3f3f83dabfa42c543b34245cbb9b33ec3d57f90b2ded76ce"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015248,
-   "hash": "0x9ab560d9403c404eeec6822f2debcae2e205d629091208e04bf875af8710fa24"
+   "block": 111060292,
+   "hash": "0xb4b8c2ceca95a6d6e0a8af91d971042f2786e831b77018468acde8fa49c1bf97"
   },
   {
    "kind": "leashed",
    "ok": false,
-   "block": 111015249,
-   "hash": "0xbf05462b5e44eae60299d663a290bb45ac5f9e39ba60bedd4dac9e1ca4f2e725"
+   "block": 111060293,
+   "hash": "0x5899e1481360352cbdbaecac961b391b4fd0bd9cdf072e7952a59bde37491b03"
   },
   {
    "kind": "twin",
    "ok": true,
-   "block": 111015249,
-   "hash": "0x2c4883417ec38ae28e5835ab8ed61d6d0113c263d11a627e7d929d25f0947116"
+   "block": 111060293,
+   "hash": "0xdd374af9eff38ff085ed7d7d7bc2874c594e3eaca609bc2ae792d3e06c2dfd7b"
+  },
+  {
+   "kind": "leashed",
+   "ok": false,
+   "block": 111060294,
+   "hash": "0x3319d2278506e8fec74fffc00f0f081504b221da80e5821db652735b97eb7963"
+  },
+  {
+   "kind": "twin",
+   "ok": true,
+   "block": 111060294,
+   "hash": "0xf3d1c26c0f8ed5bb1f95b046b4e60ce99cdd6ae00b64018fd4208ed4eb9ce061"
   }
  ]
 }

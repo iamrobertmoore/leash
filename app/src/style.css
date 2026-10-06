@@ -45,3 +45,7 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;pa
  .copy{position:relative;left:auto;top:auto;padding:96px 16px 24px}h1{font-size:44px}.band{grid-template-columns:1fr;padding:64px 16px}nav{padding:20px 16px}nav .r a{display:none}#scene{top:auto;bottom:0;height:540px}}
 
 .try{margin-top:14px;font-size:14px}.try code{font:12px 'Geist Mono';background:#0e0e12;border:1px solid var(--line);padding:3px 6px;border-radius:3px;color:var(--ink)}.try b{color:var(--refuse)}
+
+.brief{margin-top:10px;border:1px dashed #2a2a33;border-radius:3px;padding:10px}
+.brief .bt{font:500 12px 'Geist Mono';text-transform:uppercase;letter-spacing:.05em;color:var(--ink);margin-bottom:8px}.brief .bt span{color:var(--accent);margin-left:6px}
+.brief textarea{width:100%;background:#0a0a0d;border:1px solid var(--line);color:var(--ink);font:13px Geist;padding:8px;border-radius:2px;resize:vertical;margin-bottom:8px}

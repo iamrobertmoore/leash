@@ -27,11 +27,11 @@ what it can still spend today, and whether this payment will go through. No API 
 
 | Claim | How to check |
 |---|---|
-| It's live on Monad mainnet | `LeashHub` [`0xecef…4f37`](https://monadvision.com/address/0xecefc8c322e2aa77327c2b4912caec04323f4f37) on chain 143 |
-| A payment over the cap is refused on-chain | A refused `pay` from a real run: [`0x89a3…2bf0`](https://monadvision.com/tx/0x89a3bc00bc67ef0ab6a7c8e4f0b96ae7b955b3e35165ecaec2367b35e6102bf0) shows "execution reverted" |
+| It's live on Monad mainnet | `LeashHub` [`0x64a4…12c3`](https://monadvision.com/address/0x64a489074dd6a4b3b977e5f635a178366a8c12c3) on chain 143 |
+| A payment over the cap is refused on-chain | A refused `pay` from a real run: [`0xb01a…262d`](https://monadvision.com/tx/0xb01a00fd15251076160cca7f44a38e5b024955357df7159c44c3124c6634262d) shows "execution reverted" |
 | The passkey is checked by Monad's P256 precompile | `LeashAccount.ownerExecute` → Solady `WebAuthn.verify` → `staticcall` to `0x0100`. Measured 7,282 gas per verification vs 355,149 for a Solidity verifier on the same chain |
-| Every agent is a real ERC-8004 identity | Agents are registered in Monad's Identity Registry `0x8004A169…a432`; the first is #10281 |
-| The contracts do what this README says | `npm i && npx hardhat test` runs 9 tests, with the P256 precompile switched on locally |
+| Every agent is a real ERC-8004 identity | Agents are registered in Monad's Identity Registry `0x8004A169…a432`; the first on this hub is #10299 |
+| The contracts do what this README says | `npm i && npx hardhat test` runs 10 tests, with the P256 precompile switched on locally |
 
 ## How Monad is used
 

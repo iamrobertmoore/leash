@@ -1,2 +1,7 @@
 import { defineConfig } from "vite";
-export default defineConfig({ root: "app", build: { outDir: "../dist", emptyOutDir: true }, server: { proxy: { "/api": "http://localhost:8787" } } });
+import { resolve } from "node:path";
+export default defineConfig({
+  root: "app",
+  build: { outDir: "../dist", emptyOutDir: true, rollupOptions: { input: { main: resolve(__dirname, "app/index.html"), brief: resolve(__dirname, "app/brief.html") } } },
+  server: { proxy: { "/api": "http://localhost:8787" } },
+});

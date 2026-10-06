@@ -36,6 +36,7 @@ async function xyFromSpki(spki: ArrayBuffer) {
 }
 
 const STORE = "leash.passkey.v1";
+export function savedCredentialId() { return savedPasskey()?.id; }
 export function savedPasskey(): { id: string; x: Hex; y: Hex } | null {
   try { return JSON.parse(localStorage.getItem(STORE) || "null"); } catch { return null; }
 }
@@ -68,7 +69,8 @@ export async function createPasskey(): Promise<Signer> {
       user: { id: crypto.getRandomValues(new Uint8Array(16)), name: "leash-owner", displayName: "Leash owner" },
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-      authenticatorSelection: { residentKey: "preferred", userVerification: "required" },
+      authenticatorSelection: { residentKey: "required", userVerification: "required" },
+      extensions: { prf: {} } as AuthenticationExtensionsClientInputs, // lets the same passkey derive per-agent keys (Mera)
       timeout: 60_000,
     },
   })) as PublicKeyCredential;

@@ -8,6 +8,7 @@ const accountAbi = parseAbi([
   "function nonce() view returns (uint256)",
   "function leash(address agent, address token, uint128 dailyCap, uint64 expiry, address[] sellers, string agentURI) returns (uint256)",
   "function revoke(address agent)",
+  "function setBrief(address agent, bytes sealedBrief)",
 ]);
 const hubAbi = parseAbi(["function check(address agent, address seller, uint256 amount) view returns (uint8, uint256, uint64, uint256, address)"]);
 
@@ -28,6 +29,7 @@ export const leashAgent = (s: Signer, st: Setup) => owner(s, st.account, encodeF
   abi: accountAbi, functionName: "leash",
   args: [st.agent, st.token, parseUnits("5", 6), BigInt(Math.floor(Date.now() / 1000) + 7 * 86400), [], `${location.origin}/agents/demo.json`],
 }));
+export const setBrief = (s: Signer, st: Setup, sealed: Hex) => owner(s, st.account, encodeFunctionData({ abi: accountAbi, functionName: "setBrief", args: [st.agent, sealed] }));
 export const revokeAgent = (s: Signer, st: Setup) => owner(s, st.account, encodeFunctionData({ abi: accountAbi, functionName: "revoke", args: [st.agent] }));
 export const buyForecast = (st: Setup) => api<any>("buy", { account: st.account });
 export const runAttack = (st: Setup) => api<{ leashed: Hex[]; unleashed: Hex[] }>("attack", { account: st.account });

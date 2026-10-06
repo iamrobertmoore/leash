@@ -70,7 +70,7 @@ async function fund(to: Address, target: bigint) {
   }
 }
 
-const ALLOWED_OPS = new Set(["leash", "revoke", "setCap", "setSeller"]);
+const ALLOWED_OPS = new Set(["leash", "revoke", "setCap", "setSeller", "setBrief"]);
 
 /** Submit a passkey-signed owner action. Refuses anything but leash management (no withdraw via the demo relayer). */
 export async function submitOwner(account: Address, op: Hex, auth: {

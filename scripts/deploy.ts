@@ -18,7 +18,10 @@ async function main() {
   const wait = (h: `0x${string}`) => pc.waitForTransactionReceipt({ hash: h });
 
   const hub = await hre.viem.deployContract("LeashHub", [IDENTITY]);
-  const usdT = await hre.viem.deployContract("TestUSD");
+  // Reuse the demo dollar across redeploys (TOKEN=0x...), so balances and docs stay stable.
+  const usdT = process.env.TOKEN
+    ? await hre.viem.getContractAt("TestUSD", process.env.TOKEN as `0x${string}`)
+    : await hre.viem.deployContract("TestUSD");
   out.hub = hub.address; out.implementation = await hub.read.implementation(); out.testUSD = usdT.address;
 
   // Demo owner: a software passkey (same WebAuthn bytes a browser produces).

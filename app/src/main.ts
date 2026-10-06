@@ -1,7 +1,8 @@
 import { createScene } from "./tether";
 import { NET, STATUS } from "./config";
-import { createPasskey, demoSigner, passkeySupported, resumePasskey, type Signer } from "./passkey";
-import { setupAccount, leashAgent, runAttack, revokeAgent, sellerCheck, watch, buyForecast, type Setup } from "./chain";
+import { createPasskey, demoSigner, passkeySupported, resumePasskey, savedCredentialId, type Signer } from "./passkey";
+import { sealBrief } from "./brief";
+import { setupAccount, leashAgent, runAttack, revokeAgent, sellerCheck, watch, buyForecast, setBrief, type Setup } from "./chain";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const scene = createScene($("scene") as HTMLCanvasElement);
@@ -83,6 +84,16 @@ $("b2").onclick = () => busy($("b2") as HTMLButtonElement, $("o2"), async () => 
   const r = await leashAgent(signer!, setup!);
   $("o2").innerHTML = `Leashed: $5.00/day, 7 days. Verified on-chain in block ${Number(r.block).toLocaleString()} · ${tx(r.hash)}`;
   ($("bBuy") as HTMLButtonElement).disabled = false; stepOn(3);
+  $("briefBox").hidden = false;
+  if (signer!.kind !== "passkey") { $("oBrief").innerHTML = "Needs a real passkey (the demo key can't run WebAuthn PRF)."; ($("bBrief") as HTMLButtonElement).disabled = true; }
+});
+
+$("bBrief").onclick = () => busy($("bBrief") as HTMLButtonElement, $("oBrief"), async () => {
+  $("oBrief").innerHTML = "Deriving this agent's key from your passkey (WebAuthn PRF, salt leash.brief.v1:agent)…";
+  const { sealed, fingerprint } = await sealBrief(setup!.agent, ($("briefText") as HTMLTextAreaElement).value, savedCredentialId());
+  $("oBrief").innerHTML = `Sealed (${(sealed.length - 2) / 2} bytes, key ${fingerprint}…). Signing to store it on the agent's ERC-8004 identity…`;
+  const r = await setBrief(signer!, setup!, sealed);
+  $("oBrief").innerHTML = `Stored on ERC-8004 · ${tx(r.hash)}<br>No key stored anywhere. <a href="/brief.html?agent=${setup!.agent}" target="_blank" rel="noopener">Open it on another device ↗</a>`;
 });
 
 let bought = 0;

@@ -24,7 +24,7 @@ const NETS: Record<string, Net> = {
   // filled in by the mainnet deploy (Thu)
   mainnet: {
     chain: monadMainnet,
-    hub: "0xecefc8c322e2aa77327c2b4912caec04323f4f37",
+    hub: "0x64a489074dd6a4b3b977e5f635a178366a8c12c3",
     token: "0x4adf40e6e5113339635e6dc54ff638e7b63bbea3",
     identity: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
   },

@@ -115,6 +115,16 @@ describe("Leash", () => {
     await expect(account.write.ownerExecute([op, good], { account: relayer.account })).to.be.rejectedWith("BadSignature");
   });
 
+  it("seals a brief onto the agent's ERC-8004 identity, owner only", async () => {
+    const { owner, account, agentW, usdT, identity, now, relayer } = await setup();
+    await owner("leash", [agentW.account.address, usdT.address, usd(5), BigInt(now + DAY), [], ""]);
+    const sealed = "0x01aabbccddeeff00112233445566778899";
+    await owner("setBrief", [agentW.account.address, sealed]);
+    const id = (await account.read.leashes([agentW.account.address]))[5];
+    expect(await identity.read.getMetadata([id, "leash.brief"])).to.equal(sealed);
+    await expect(account.write.setBrief([agentW.account.address, sealed], { account: relayer.account })).to.be.rejectedWith("OnlySelf");
+  });
+
   it("an unknown agent comes back UNKNOWN_AGENT", async () => {
     const { hub, rawAgentW, sellerW } = await setup();
     const c = await hub.read.check([rawAgentW.account.address, sellerW.account.address, usd(1)]);

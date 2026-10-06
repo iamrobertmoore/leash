@@ -16,7 +16,7 @@ import { checkAgent } from "leash-monad";
 const v = await checkAgent(agentAddress, myAddress, "2.00");   // Monad mainnet by default
 if (!v.ok) return res.status(403).json(v);
 // v = { status: "OK", ok: true, remainingToday: "3.0", expiry: 1791887540,
-//       erc8004Id: "10281", account: "0xB1C6…", reason: "This agent is leashed and this payment fits its budget." }
+//       erc8004Id: "10299", account: "0xB1C6…", reason: "This agent is leashed and this payment fits its budget." }
 ```
 
 | `status` | Meaning |
@@ -65,7 +65,7 @@ nothing leaves the account.
 
 | | Chain | LeashHub |
 |---|---|---|
-| `mainnet` (default) | Monad, 143 | `0xecefc8c322e2aa77327c2b4912caec04323f4f37` |
+| `mainnet` (default) | Monad, 143 | `0x64a489074dd6a4b3b977e5f635a178366a8c12c3` |
 | `testnet` | Monad Testnet, 10143 | `0x8b427106c04e66dfc6e8d58fa4de0478a54f510a` |
 
 Pass `{ network: "testnet" }` as the last argument to any call.

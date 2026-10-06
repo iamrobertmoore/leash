@@ -13,6 +13,7 @@ interface IIdentityRegistry {
     }
 
     function register(string calldata agentURI, MetadataEntry[] calldata metadata) external returns (uint256 agentId);
+    function setMetadata(uint256 agentId, string calldata metadataKey, bytes calldata metadataValue) external;
 }
 
 interface ILeashHub {
@@ -68,6 +69,7 @@ contract LeashAccount {
     );
     event OwnerAction(uint256 indexed nonce, bytes4 selector);
     event Withdrawn(address indexed token, address indexed to, uint256 amount);
+    event BriefSealed(address indexed agent, uint256 indexed agentId, uint256 size);
 
     error AlreadyInitialized();
     error OnlySelf();
@@ -79,6 +81,7 @@ contract LeashAccount {
     error LeashExpired(uint64 expiry);
     error SellerNotAllowed(address seller);
     error OverCap(uint256 remainingToday, uint256 attempted);
+    error BriefTooLarge();
 
     modifier onlySelf() {
         if (msg.sender != address(this)) revert OnlySelf();
@@ -182,6 +185,16 @@ contract LeashAccount {
         if (l.token == address(0)) revert UnknownAgent();
         l.active = false;
         emit Revoked(agent);
+    }
+
+    /// @notice Store the agent's sealed brief on its ERC-8004 identity ("leash.brief"). The contract never sees the key:
+    /// the owner's passkey derives a per-agent AES key through WebAuthn PRF (via Mera) and encrypts off-chain.
+    function setBrief(address agent, bytes calldata sealedBrief) external onlySelf {
+        Leash storage l = leashes[agent];
+        if (l.token == address(0)) revert UnknownAgent();
+        if (sealedBrief.length > 1024) revert BriefTooLarge();
+        identity.setMetadata(l.agentId, "leash.brief", sealedBrief);
+        emit BriefSealed(agent, l.agentId, sealedBrief.length);
     }
 
     function withdraw(address token, address to, uint256 amount) external onlySelf {

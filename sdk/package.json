@@ -1,6 +1,6 @@
 {
   "name": "leash-monad",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Spend limits for AI agents on Monad. One call tells a seller whose agent it is, what it may spend today, and whether a payment will go through.",
   "license": "MIT",
   "author": "Robert Moore",

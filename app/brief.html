@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leash · open a sealed brief</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/style.css">
+<style>.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:110px 20px 80px}.wrap h1{font-size:44px}
+.card{margin-top:26px;background:rgba(8,8,10,.72);border:1px solid #1d1d23;border-radius:4px;padding:20px}
+.row{display:grid;grid-template-columns:150px 1fr;gap:10px;font:12px 'Geist Mono';color:var(--muted);padding:6px 0;border-bottom:1px solid var(--line)}.row b{color:var(--ink);font-weight:400;overflow-wrap:anywhere}
+.plain{margin-top:16px;font-size:20px;line-height:1.45;padding:16px;border:1px solid rgba(139,144,255,.35);border-radius:3px;background:rgba(139,144,255,.06)}</style>
+</head><body><div class="fx haze"></div><div class="fx grain"></div>
+<nav><a class="logo" href="/">Leash</a><div class="r"><span class="live"><i></i><span id="net"></span></span></div></nav>
+<div class="wrap"><div class="k ac">One passkey, many keys</div>
+ <h1>Open your agent's sealed brief.</h1>
+ <p class="lede">The brief lives on the agent's public ERC-8004 identity, encrypted. The key isn't stored anywhere: your passkey re-derives it here, through WebAuthn PRF with a salt only this agent uses. Same passkey on any device, same key.</p>
+ <div class="card">
+  <div class="row"><span>agent</span><b id="agent">—</b></div>
+  <div class="row"><span>ERC-8004 id</span><b id="aid">—</b></div>
+  <div class="row"><span>PRF salt</span><b>sha256("leash.brief.v1:" + agent)</b></div>
+  <div class="row"><span>sealed on-chain</span><b id="sealed">—</b></div>
+  <div class="row"><span>derived key</span><b id="fp">appears after you unseal (fingerprint only)</b></div>
+  <div style="margin-top:16px"><button class="btn p" id="go">Unseal with my passkey</button></div>
+  <div class="out" id="out"></div><div class="plain" id="plain" hidden></div>
+ </div></div>
+<script type="module">
+import { readSealedBrief, unsealBrief } from "/src/brief.ts";
+import { NET } from "/src/config.ts";
+const $ = (id) => document.getElementById(id);
+$("net").textContent = NET.name.toUpperCase();
+const agent = new URLSearchParams(location.search).get("agent");
+$("agent").textContent = agent ?? "add ?agent=0x… to the URL";
+let sealed;
+if (agent) readSealedBrief(agent).then((r) => { $("aid").textContent = "#" + r.agentId; sealed = r.sealed; $("sealed").textContent = r.sealed === "0x" ? "no brief yet" : `${(r.sealed.length - 2) / 2} bytes · ${r.sealed.slice(0, 26)}…`; }).catch((e) => ($("out").textContent = e.message));
+$("go").onclick = async () => {
+  $("out").textContent = "Your passkey is deriving this agent's key…";
+  try { const r = await unsealBrief(agent, sealed); $("fp").textContent = r.fingerprint + "…"; $("plain").hidden = false; $("plain").textContent = r.text; $("out").textContent = "Decrypted on this device. Nothing was fetched except the ciphertext from Monad."; }
+  catch (e) { $("out").innerHTML = `<span class="e">${e.code === "PRF_UNAVAILABLE" ? "This browser's passkey can't run PRF. Try Chrome with Google Password Manager, Safari, or 1Password." : (e.message ?? e)}</span>`; }
+};
+</script></body></html>

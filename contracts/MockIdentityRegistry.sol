@@ -26,6 +26,11 @@ contract MockIdentityRegistry is ERC721 {
         }
     }
 
+    function setMetadata(uint256 id, string calldata key, bytes calldata value) external {
+        require(ownerOf(id) == msg.sender, "not owner");
+        metadata[id][key] = value;
+    }
+
     function getMetadata(uint256 id, string calldata key) external view returns (bytes memory) {
         return metadata[id][key];
     }
