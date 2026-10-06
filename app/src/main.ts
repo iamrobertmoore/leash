@@ -59,7 +59,12 @@ $("try").onclick = async () => {
   $("steps").hidden = false; stepOn(1);
   live = true; scene.setMode("live"); scene.reset(); stats(); scene.setLabel("YOUR AGENT");
   if (!(await passkeySupported())) $("b1").textContent = "Create passkey (if your device has one)";
-  const saved = resumePasskey(); if (saved) { $("o1").innerHTML = "Found your passkey from last time."; }
+  const saved = resumePasskey();
+  if (saved) {
+    $("b1").textContent = "Use my passkey";
+    $("o1").innerHTML = `Found your passkey from last time. <button class="link" id="b1new">Create a new one instead</button>`;
+    $("b1new").onclick = () => busy($("b1") as HTMLButtonElement, $("o1"), async () => { signer = await createPasskey(); await afterSigner($("o1")); });
+  }
   $("panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
 };
 
