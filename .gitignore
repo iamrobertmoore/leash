@@ -7,3 +7,5 @@ coverage/
 working/
 .env.demo
 .env.demo.mainnet
+.vercel
+.env*
