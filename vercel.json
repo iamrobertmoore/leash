@@ -1,5 +1,20 @@
 {
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
-  "functions": { "api/*.ts": { "maxDuration": 60 } }
+  "functions": {
+    "api/*.ts": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/logo.png",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    }
+  ]
 }
