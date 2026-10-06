@@ -24,6 +24,19 @@ export function demoKeys(account: Address, idx = 0) {
 }
 
 const wait = (h: Hex) => pub.waitForTransactionReceipt({ hash: h, timeout: 30_000 });
+
+/** Several judges can hit the relayer at once from different serverless instances, so nonces can collide.
+ *  Retry a relayer send a few times with jitter when the node rejects it. */
+async function retrying<T>(fn: () => Promise<T>): Promise<T> {
+  for (let i = 0; ; i++) {
+    try { return await fn(); }
+    catch (e: any) {
+      const msg = String(e?.details ?? e?.shortMessage ?? e?.message ?? "");
+      if (i >= 3 || !/nonce|invalid parameters|replacement|already known|underpriced/i.test(msg)) throw e;
+      await new Promise((r) => setTimeout(r, 400 + Math.random() * 900));
+    }
+  }
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function createAccount(x: Hex, y: Hex) {
@@ -31,8 +44,8 @@ export async function createAccount(x: Hex, y: Hex) {
   const code = await pub.getCode({ address: account });
   if (!code || code === "0x") {
     const w = wallet();
-    await wait(await w.writeContract({ address: NET.hub, abi: hubAbi, functionName: "createAccount", args: [x, y] }));
-    await wait(await w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [account, usd(DEMO.accountFundUsd)] }));
+    await wait(await retrying(() => w.writeContract({ address: NET.hub, abi: hubAbi, functionName: "createAccount", args: [x, y] })));
+    await wait(await retrying(() => w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [account, usd(DEMO.accountFundUsd)] })));
   }
   return account;
 }
@@ -54,7 +67,7 @@ export async function prepareAgents(account: Address) {
   await fund(twin.address, parseEther(DEMO.twinGasMon));
   const tb = await pub.readContract({ address: NET.token, abi: erc20Abi, functionName: "balanceOf", args: [twin.address] });
   if (tb < usd(DEMO.twinFundUsd)) {
-    await wait(await w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [twin.address, usd(DEMO.twinFundUsd) - tb] }));
+    await wait(await retrying(() => w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [twin.address, usd(DEMO.twinFundUsd) - tb] })));
   }
   return { agent: agent.address, twin: twin.address, token: NET.token, attacker: DEMO.attacker };
 }
@@ -64,7 +77,7 @@ async function fund(to: Address, target: bigint) {
   for (let i = 0; i < 4; i++) {
     const bal = await pub.getBalance({ address: to });
     if (bal >= (target * 8n) / 10n) return;
-    const r = await wait(await wallet().sendTransaction({ to, value: target - bal }));
+    const r = await wait(await retrying(() => wallet().sendTransaction({ to, value: target - bal })));
     if (r.status === "success") return;
     await sleep(1600);
   }
@@ -82,7 +95,7 @@ export async function submitOwner(account: Address, op: Hex, auth: {
   if (!isAccount) throw new Error("not a Leash account");
   const a = { ...auth, challengeIndex: BigInt(auth.challengeIndex), typeIndex: BigInt(auth.typeIndex) };
   const gas = await pub.estimateContractGas({ address: account, abi: accountAbi, functionName: "ownerExecute", args: [op, a], account: relayer() });
-  const hash = await wallet().writeContract({ address: account, abi: accountAbi, functionName: "ownerExecute", args: [op, a], gas: (gas * 12n) / 10n });
+  const hash = await retrying(() => wallet().writeContract({ address: account, abi: accountAbi, functionName: "ownerExecute", args: [op, a], gas: (gas * 12n) / 10n }));
   const r = await wait(hash);
   return { hash, status: r.status, block: r.blockNumber.toString(), fn };
 }

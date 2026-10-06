@@ -37,7 +37,7 @@ export const DEMO = {
   twinFundUsd: 20,
   accountFundUsd: 20,
   attacker: "0x000000000000000000000000000000000badF00D" as Address,
-  agentGasMon: "0.35",
-  twinGasMon: "0.25",
+  agentGasMon: "0.3",
+  twinGasMon: "0.2",
   payGas: 120_000n,
 };
