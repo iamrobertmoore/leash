@@ -99,8 +99,8 @@ export function createScene(cv: HTMLCanvasElement) {
     cx.fillStyle = C.mu; cx.font = "500 11px 'Geist Mono'"; cx.fillText(label, a.x, a.y + 34);
     for (const b of bursts) {
       b.r += 3.2; b.o *= 0.93; cx.strokeStyle = `rgba(255,77,77,${b.o})`; cx.lineWidth = 2; cx.beginPath(); cx.arc(b.x, b.y, b.r, 0, 7); cx.stroke();
-      cx.fillStyle = `rgba(255,77,77,${Math.min(1, b.o * 1.6)})`; cx.font = "500 11px 'Geist Mono'"; cx.textAlign = "left";
-      cx.fillText("REFUSED · BLOCK " + b.n.toLocaleString(), b.x + 30, b.y + 34 + (1 - b.o) * 18); cx.textAlign = "center";
+      cx.fillStyle = `rgba(255,77,77,${Math.min(1, b.o * 1.6)})`; cx.font = "500 11px 'Geist Mono'";
+      cx.fillText("REFUSED · BLOCK " + b.n.toLocaleString(), b.x, b.y + 54 + (1 - b.o) * 18); // under the agent's label, drifting down
     }
     for (let i = bursts.length - 1; i >= 0; i--) if (bursts[i].o < 0.03) bursts.splice(i, 1);
     // unleashed twin
