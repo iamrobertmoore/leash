@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Leash · spend limits for AI agents, enforced on Monad</title>
+<meta name="description" content="Give every AI agent a daily budget your passkey sets and Monad checks on every payment. Sellers can read the leash before they get paid.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-oZ8BOelp.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-rtmm3LCp.css">
+</head><body>
+<div class="fx haze"></div><div class="fx grain"></div><div class="fx scan"></div>
+<section class="hero"><canvas id="scene"></canvas>
+ <nav><a class="logo" href="/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" stroke="#F2F2F3" stroke-width="2"/><path d="M11 11 C 15 14, 17 16, 21 21" stroke="#8B90FF" stroke-width="2"/></svg>Leash</a>
+  <div class="r"><a href="#sellers">Sellers</a><a href="#sdk">SDK</a><a href="https://github.com/iamrobertmoore/leash">GitHub</a><span class="live"><i></i><span id="net"></span> <b id="blk">—</b></span></div></nav>
+ <div class="copy"><div class="k">18 Mar 2025 · an AI agent was hijacked</div>
+  <h1>It lost <span class="r">55&nbsp;ETH</span>.<br>On a Leash: <span class="px">$5</span>.</h1>
+  <p class="lede">Your passkey sets each agent's daily budget. <b>Monad checks it on every payment</b>, and anyone can read it before they get paid. Past the limit, the chain says no.</p>
+  <div class="cta"><button class="btn p" id="try">Hijack my own agent →</button><a class="btn" href="#sellers">Add to your API</a></div>
+  <p class="src">55 ETH, about $100k, via a compromised dashboard. <a href="https://www.theblock.co/post/346911/ai-crypto-bot-aixbt-lost-eth-hack-unauthorized-dashboard-access" target="_blank" rel="noopener">The Block</a></p></div>
+
+ <aside class="panel" id="panel">
+  <div class="stats"><div><span>unleashed twin</span><b id="sTwin">$20.00</b></div><div><span>on a leash · spent</span><b id="sSpent">$0.00</b></div><div><span>refused on-chain</span><b id="sRef" class="red">0</b></div></div>
+  <ol class="steps" id="steps" hidden>
+   <li data-s="1"><div class="t">Create your passkey</div><div class="d">Face ID, Touch ID or Windows Hello. Becomes your Leash account on Monad.</div>
+     <button class="sbtn" id="b1">Create passkey</button> <button class="link" id="b1demo">No passkey? Use a demo key</button><div class="out" id="o1"></div></li>
+   <li data-s="2"><div class="t">Put your agent on a $5/day leash</div><div class="d">Signed by your passkey, verified on-chain by Monad's P256 precompile. Registers the agent under ERC-8004.</div>
+     <button class="sbtn" id="b2" disabled>Sign the leash</button><div class="out" id="o2"></div></li>
+   <li data-s="3"><div class="t">Hijack it</div><div class="d">20 drain attempts of $1, from the leashed agent and from an identical agent with no leash.</div>
+     <button class="sbtn red" id="b3" disabled>Run the attack</button><div class="out" id="o3"></div></li>
+   <li data-s="4"><div class="t">Revoke in one tap</div><div class="d">Then ask what a seller sees.</div>
+     <button class="sbtn" id="b4" disabled>Revoke agent</button><div class="out" id="o4"></div></li>
+  </ol>
+ </aside>
+</section>
+
+<section class="band" id="sellers">
+ <div class="col"><div class="k ac">For sellers</div><h2>One read before you serve an agent.</h2>
+  <p>Any API, site or contract can ask Monad whose agent this is, what it may still spend today, and whether this payment will go through. No API key, no trust in the agent's own word.</p></div>
+ <pre class="code" id="sdk"><span class="c">// npm i @leash/sdk</span>
+<span class="k2">import</span> { checkAgent } <span class="k2">from</span> <span class="s">"@leash/sdk"</span>;
+
+<span class="k2">const</span> v = <span class="k2">await</span> checkAgent(agentAddress, myAddress, <span class="s">"2.00"</span>);
+<span class="k2">if</span> (v.status !== <span class="s">"OK"</span>) <span class="k2">return</span> res.status(<span class="n">402</span>).json(v);
+<span class="c">// v = { status: "OVER_CAP", remainingToday: "0.00", owner: "0x…", erc8004Id: 10281 }</span></pre>
+</section>
+<footer><span>Leash · built for Monad Metropolis · MIT</span><span id="foot"></span></footer>
+</body></html>

@@ -1,4 +1,4 @@
-import { defineChain, type Address } from "viem";
+import { defineChain, type Address, type Chain } from "viem";
 
 export const monadTestnet = defineChain({
   id: 10143, name: "Monad Testnet",
@@ -13,7 +13,7 @@ export const monadMainnet = defineChain({
   blockExplorers: { default: { name: "MonadVision", url: "https://monadvision.com" } },
 });
 
-type Net = { chain: typeof monadTestnet; hub: Address; token: Address; identity: Address };
+type Net = { chain: Chain; hub: Address; token: Address; identity: Address };
 const NETS: Record<string, Net> = {
   testnet: {
     chain: monadTestnet,
@@ -24,12 +24,12 @@ const NETS: Record<string, Net> = {
   // filled in by the mainnet deploy (Thu)
   mainnet: {
     chain: monadMainnet,
-    hub: "0x0000000000000000000000000000000000000000",
-    token: "0x0000000000000000000000000000000000000000",
+    hub: "0xecefc8c322e2aa77327c2b4912caec04323f4f37",
+    token: "0x4adf40e6e5113339635e6dc54ff638e7b63bbea3",
     identity: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
   },
 };
-export const NET = NETS[process.env.LEASH_NETWORK ?? "testnet"];
+export const NET = NETS[process.env.LEASH_NETWORK ?? "mainnet"];
 export const DEMO = {
   capUsd: 5,
   attempts: 20,
@@ -37,6 +37,7 @@ export const DEMO = {
   twinFundUsd: 20,
   accountFundUsd: 20,
   attacker: "0x000000000000000000000000000000000badF00D" as Address,
-  agentGasMon: "0.6",
+  agentGasMon: "0.35",
+  twinGasMon: "0.25",
   payGas: 120_000n,
 };

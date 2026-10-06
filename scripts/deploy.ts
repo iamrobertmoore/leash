@@ -6,13 +6,15 @@ import { encodeFunctionData, parseUnits, keccak256, toHex } from "viem";
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import { softPasskey } from "../lib/webauthn";
 
-const IDENTITY = "0x8004A818BFB912233c491871b3d84c89A494BD9e"; // ERC-8004 Identity Registry, Monad testnet
+// ERC-8004 Identity Registry: testnet deployment vs the mainnet one listed in Monad's docs.
+const IDENTITY = hre.network.name === "monadMainnet" ? "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" : "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const usd = (n: number) => parseUnits(String(n), 6);
 
 async function main() {
   const pc = await hre.viem.getPublicClient();
   const [deployer] = await hre.viem.getWalletClients();
-  const out: Record<string, unknown> = { network: "Monad Testnet", chainId: 10143, rpc: "https://testnet-rpc.monad.xyz" };
+  const isMain = hre.network.name === "monadMainnet";
+  const out: Record<string, unknown> = isMain ? { network: "Monad Mainnet", chainId: 143, rpc: "https://rpc.monad.xyz" } : { network: "Monad Testnet", chainId: 10143, rpc: "https://testnet-rpc.monad.xyz" };
   const wait = (h: `0x${string}`) => pc.waitForTransactionReceipt({ hash: h });
 
   const hub = await hre.viem.deployContract("LeashHub", [IDENTITY]);
@@ -43,7 +45,7 @@ async function main() {
   out.agentId = (await account.read.leashes([agent.address]))[5].toString();
 
   const { createWalletClient, http, defineChain } = await import("viem");
-  const chain = defineChain({ id: 10143, name: "Monad Testnet", nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 }, rpcUrls: { default: { http: ["https://testnet-rpc.monad.xyz"] } } });
+  const chain = defineChain({ id: out.chainId as number, name: out.network as string, nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 }, rpcUrls: { default: { http: [out.rpc as string] } } });
   const aw = createWalletClient({ account: agent, chain, transport: http() });
   const pays: unknown[] = [];
   for (let i = 1; i <= 3; i++) {
@@ -64,9 +66,9 @@ async function main() {
   out.check = (await hub.read.check([agent.address, seller.address, usd(2)])).map(String);
   out.demoAgent = agent.address; out.demoSeller = seller.address;
   fs.mkdirSync("deployments", { recursive: true });
-  fs.writeFileSync("deployments/monad-testnet.json", JSON.stringify(out, null, 2));
+  fs.writeFileSync(isMain ? "deployments/monad-mainnet.json" : "deployments/monad-testnet.json", JSON.stringify(out, null, 2));
   // Demo keys stay in the workspace, never in the repo.
-  fs.writeFileSync(".env.demo", `AGENT_KEY=${agentKey}\nSELLER_KEY=${sellerKey}\n`);
+  fs.writeFileSync(isMain ? ".env.demo.mainnet" : ".env.demo", `AGENT_KEY=${agentKey}\nSELLER_KEY=${sellerKey}\n`);
   console.log(JSON.stringify(out, null, 2));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

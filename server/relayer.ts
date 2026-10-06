@@ -40,8 +40,8 @@ export async function createAccount(x: Hex, y: Hex) {
 export async function prepareAgents(account: Address) {
   const { agent, twin } = demoKeys(account);
   const w = wallet();
-  const min = parseEther(DEMO.agentGasMon) / 2n;
-  for (const a of [agent, twin]) await fund(a.address, min);
+  await fund(agent.address, parseEther(DEMO.agentGasMon));
+  await fund(twin.address, parseEther(DEMO.twinGasMon));
   const tb = await pub.readContract({ address: NET.token, abi: erc20Abi, functionName: "balanceOf", args: [twin.address] });
   if (tb < usd(DEMO.twinFundUsd)) {
     await wait(await w.writeContract({ address: NET.token, abi: erc20Abi, functionName: "mint", args: [twin.address, usd(DEMO.twinFundUsd) - tb] }));
@@ -50,9 +50,11 @@ export async function prepareAgents(account: Address) {
 }
 
 /** Monad's reserve-balance rule can revert a value transfer from a low-balance sender, so verify and retry. */
-async function fund(to: Address, min: bigint) {
-  for (let i = 0; i < 4 && (await pub.getBalance({ address: to })) < min; i++) {
-    const r = await wait(await wallet().sendTransaction({ to, value: parseEther(DEMO.agentGasMon) }));
+async function fund(to: Address, target: bigint) {
+  for (let i = 0; i < 4; i++) {
+    const bal = await pub.getBalance({ address: to });
+    if (bal >= (target * 8n) / 10n) return;
+    const r = await wait(await wallet().sendTransaction({ to, value: target - bal }));
     if (r.status === "success") return;
     await sleep(1600);
   }

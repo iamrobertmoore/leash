@@ -35,5 +35,12 @@ async function main() {
   console.log("seller check after revoke:", STATUS[(await check(ag.agent, "0x000000000000000000000000000000000badF00D", 1)).status]);
   console.log("refused hashes sample", rs.filter((r) => r.status !== "success").slice(0, 2).map((r) => r.transactionHash));
   console.log(`total ${Date.now() - t0}ms`);
+  // Save the run as the landing page's replay: real hashes, real blocks.
+  const ev = [
+    ...rs.map((r) => ({ kind: "leashed", ok: r.status === "success", block: Number(r.blockNumber), hash: r.transactionHash })),
+    ...ts.map((r) => ({ kind: "twin", ok: r.status === "success", block: Number(r.blockNumber), hash: r.transactionHash })),
+  ].sort((a, b) => a.block - b.block);
+  const fs = await import("node:fs");
+  fs.writeFileSync("app/public/replay.json", JSON.stringify({ chainId: NET.chain.id, account, agent: ag.agent, twin: ag.twin, recorded: new Date().toISOString(), events: ev }, null, 1));
 }
 main().catch((e) => { console.error(e); process.exit(1); });

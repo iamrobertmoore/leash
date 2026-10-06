@@ -8,5 +8,10 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "app",
+    "node_modules",
+    "dist"
+  ]
 }

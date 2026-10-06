@@ -14,6 +14,11 @@ const config: HardhatUserConfig = {
       chainId: 10143,
       accounts: process.env.DEPLOYER_KEY ? [process.env.DEPLOYER_KEY] : [],
     },
+    monadMainnet: {
+      url: process.env.MONAD_MAINNET_RPC ?? "https://rpc.monad.xyz",
+      chainId: 143,
+      accounts: process.env.DEPLOYER_KEY ? [process.env.DEPLOYER_KEY] : [],
+    },
   },
 };
 export default config;

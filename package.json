@@ -17,7 +17,8 @@
     "chai": "^4.5.0",
     "hardhat": "^2.29.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.1",

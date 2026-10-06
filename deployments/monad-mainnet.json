@@ -1,0 +1,45 @@
+{
+  "network": "Monad Mainnet",
+  "chainId": 143,
+  "rpc": "https://rpc.monad.xyz",
+  "hub": "0xecefc8c322e2aa77327c2b4912caec04323f4f37",
+  "implementation": "0xA0699622Fd262787bd7Fa8D3c7dB10C0c2610F8F",
+  "testUSD": "0x4adf40e6e5113339635e6dc54ff638e7b63bbea3",
+  "demoAccount": "0xB1C604FA12576fB70F9625af770B4D43F9d0Fd9e",
+  "leashTx": {
+    "hash": "0x6661c9a6ec7c953c1b268545baeab8cd727d6599ee32bf8d38f4683cd373e545",
+    "gasUsed": "645778",
+    "status": "success"
+  },
+  "agentId": "10281",
+  "pays": [
+    {
+      "call": 1,
+      "hash": "0x12c2b3801527acbb6d73989859570a82f6efcf8a559c2dfe6c186cc4c7d5de4b",
+      "status": "success",
+      "gasUsed": "114577"
+    },
+    {
+      "call": 2,
+      "hash": "0x75f791606fd32ab8ecacc2e1763f3e9a6412c4c0301ff3ac5d8259f089c4a362",
+      "status": "success",
+      "gasUsed": "96478"
+    },
+    {
+      "call": 3,
+      "hash": "0x89a3bc00bc67ef0ab6a7c8e4f0b96ae7b955b3e35165ecaec2367b35e6102bf0",
+      "status": "reverted",
+      "gasUsed": "90000",
+      "note": "The contract function \"pay\" reverted."
+    }
+  ],
+  "check": [
+    "5",
+    "1000000",
+    "1791887540",
+    "10281",
+    "0xB1C604FA12576fB70F9625af770B4D43F9d0Fd9e"
+  ],
+  "demoAgent": "0x03B0D0e7A17C0951DB09d314973D221Fc97adD11",
+  "demoSeller": "0x409B98D8DeA8dDe5B7807E732a89A9AE5F82A2aB"
+}
