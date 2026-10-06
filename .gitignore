@@ -9,3 +9,4 @@ working/
 .env.demo.mainnet
 .vercel
 .env*
+dist/

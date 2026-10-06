@@ -6,7 +6,7 @@
   "author": "Robert Moore",
   "repository": {
     "type": "git",
-    "url": "https://github.com/iamrobertmoore/leash",
+    "url": "git+https://github.com/iamrobertmoore/leash.git",
     "directory": "sdk"
   },
   "homepage": "https://leash-monad.vercel.app",
