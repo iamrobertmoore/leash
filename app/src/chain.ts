@@ -31,11 +31,20 @@ export const leashAgent = (s: Signer, st: Setup) => owner(s, st.account, encodeF
 }));
 export const setBrief = (s: Signer, st: Setup, sealed: Hex) => owner(s, st.account, encodeFunctionData({ abi: accountAbi, functionName: "setBrief", args: [st.agent, sealed] }));
 export const revokeAgent = (s: Signer, st: Setup) => owner(s, st.account, encodeFunctionData({ abi: accountAbi, functionName: "revoke", args: [st.agent] }));
+// ---- "Leash your own agent" (own.html): any agent key, e.g. one made by `npx leash-monad-mcp --new-key`
+export const setupOwn = (s: Signer) => api<{ account: Address }>("account", { x: s.x, y: s.y, own: true });
+export const leashOwn = (s: Signer, account: Address, a: { agent: Address; token: Address; capUsd: number; days: number; sellers: Address[] }) =>
+  owner(s, account, encodeFunctionData({
+    abi: accountAbi, functionName: "leash",
+    args: [a.agent, a.token, parseUnits(String(a.capUsd), 6), BigInt(Math.floor(Date.now() / 1000) + a.days * 86400), a.sellers, `${location.origin}/agents/own.json`],
+  }));
+export const fundOwn = (account: Address, agent: Address) => api<{ gasMon: number }>("own", { account, agent });
+export const revokeOwn = (s: Signer, account: Address, agent: Address) => owner(s, account, encodeFunctionData({ abi: accountAbi, functionName: "revoke", args: [agent] }));
 export const buyForecast = (st: Setup) => api<any>("buy", { account: st.account });
 export const runAttack = (st: Setup) => api<{ leashed: Hex[]; unleashed: Hex[] }>("attack", { account: st.account });
 
-export async function sellerCheck(agent: Address, amountUsd = 1) {
-  const r = await pub.readContract({ address: NET.hub, abi: hubAbi, functionName: "check", args: [agent, ATTACKER, parseUnits(String(amountUsd), 6)] });
+export async function sellerCheck(agent: Address, amountUsd = 1, seller: Address = ATTACKER) {
+  const r = await pub.readContract({ address: NET.hub, abi: hubAbi, functionName: "check", args: [agent, seller, parseUnits(String(amountUsd), 6)] });
   return { status: r[0], remaining: Number(r[1]) / 1e6, agentId: r[3], account: r[4] };
 }
 

@@ -39,5 +39,6 @@ export const DEMO = {
   attacker: "0x000000000000000000000000000000000badF00D" as Address,
   agentGasMon: "0.3",
   twinGasMon: "0.2",
+  ownAgentGasMon: "0.1", // gas for a judge's own MCP agent: about eight payments
   payGas: 120_000n,
 };

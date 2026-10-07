@@ -1,0 +1,23 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Contracts (22 tests, P256 precompile on)
+        run: npx hardhat test
+      - name: SDK build
+        run: cd sdk && npm ci && npm run build
+      - name: MCP server, end to end on a local chain
+        run: |
+          cd mcp && npm ci && npm run build && cd ..
+          npx hardhat compile
+          npx hardhat node > /tmp/node.log 2>&1 &
+          sleep 6
+          npx tsx mcp/test/e2e.ts
+      - name: Site build
+        run: npx vite build

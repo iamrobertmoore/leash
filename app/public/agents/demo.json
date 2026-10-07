@@ -1,0 +1,12 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "Leash demo agent",
+  "description": "A demo agent on a Leash: a daily dollar budget, set by its owner's passkey and enforced by a Monad contract on every payment. Check it before you serve it: LeashHub.check(agent, seller, amount) on Monad mainnet.",
+  "image": "https://leash-monad.vercel.app/logo.png",
+  "endpoints": [
+    { "name": "leash-check", "endpoint": "https://leash-monad.vercel.app/api/check?agent={agent}&seller={seller}&amount={usd}", "version": "1" },
+    { "name": "leash-history", "endpoint": "https://leash-monad.vercel.app/api/agent?agent={agent}", "version": "1" }
+  ],
+  "registrations": [{ "agentRegistry": "eip155:143:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432", "leashHub": "0x64a489074dd6a4b3b977e5f635a178366a8c12c3" }],
+  "supportedTrust": ["leash-spend-limit"]
+}

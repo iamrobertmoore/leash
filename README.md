@@ -2,7 +2,7 @@
 
 <h1 align="center">Leash</h1>
 <p align="center"><b>Spend limits for AI agents, set with your passkey and enforced on Monad.</b></p>
-<p align="center"><a href="https://leash-monad.vercel.app">Live site (Monad mainnet)</a> · <a href="sdk/README.md">SDK: <code>leash-monad</code></a> · <a href="#verify-it-in-five-minutes">Verify it</a> · <a href="#how-monad-is-used">How Monad is used</a></p>
+<p align="center"><a href="https://leash-monad.vercel.app">Live site (Monad mainnet)</a> · <a href="sdk/README.md">SDK: <code>leash-monad</code></a> · <a href="mcp/README.md">MCP server</a> · <a href="#verify-it-in-five-minutes">Verify it</a> · <a href="docs/SECURITY.md">Threats &amp; gas</a> · <a href="#how-monad-is-used">How Monad is used</a></p>
 
 ---
 
@@ -22,6 +22,7 @@ what it can still spend today, and whether this payment will go through. No API 
 | [Hijack my own agent](https://leash-monad.vercel.app) | Your passkey creates an account, leashes an agent at $5/day, and 20 drain attempts hit it. 15 or so are refused on-chain while the unleashed twin loses all $20. About 15 seconds |
 | `curl -i https://leash-monad.vercel.app/api/forecast` | A real paid API answers `402` until an agent pays inside its leash |
 | `npm i leash-monad viem` then `checkAgent(agent, me, "2.00")` | `OK`, `OVER_CAP`, `REVOKED`, `EXPIRED` or `UNKNOWN_AGENT`, straight from the chain |
+| [Leash your own agent](https://leash-monad.vercel.app/own.html) with `npx leash-monad-mcp --new-key` | Any MCP agent (Claude Desktop, Cursor, …) gets `pay` and `fetch_paid` tools that can't spend past the daily cap your passkey set. Tested on mainnet: three paid API calls, the fourth refused |
 
 ## Verify it in five minutes
 
@@ -74,6 +75,8 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 
 ## Limits
 
+The full threat table, with the code and test for each row, and gas for every action: [`docs/SECURITY.md`](docs/SECURITY.md).
+
 - The demo relayer pays gas and funds demo agents; it only relays leash, revoke, cap and seller changes, and can't move an account's money.
 - The demo spends a test dollar (`tUSD`, 6 decimals) deployed for this, not real USDC. The token is a parameter of each leash.
 - The daily budget resets at 00:00 UTC.
@@ -84,7 +87,9 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 npm install
 npx hardhat test                       # contracts, P256 precompile enabled locally
 npx vite build                         # the site
-cd sdk && npm install && npm run build # the SDK
+(cd sdk && npm install && npm run build) # the SDK
+(cd mcp && npm install && npm run build) # the MCP server
+npx hardhat node & npx tsx mcp/test/e2e.ts   # MCP end to end on a local chain
 ```
 
 Deployed addresses are in [`deployments/`](deployments).

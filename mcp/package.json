@@ -1,0 +1,24 @@
+{
+  "name": "leash-monad-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that lets any AI agent pay inside its Leash on Monad: check a seller, see today's budget, pay, or fetch a paid (402) URL. The agent can never spend past what its owner's passkey allowed.",
+  "license": "MIT",
+  "author": "Robert Moore",
+  "repository": { "type": "git", "url": "git+https://github.com/iamrobertmoore/leash.git", "directory": "mcp" },
+  "homepage": "https://leash-monad.vercel.app",
+  "keywords": ["mcp", "model-context-protocol", "monad", "ai-agents", "x402", "erc-8004", "spend-limits"],
+  "type": "module",
+  "bin": { "leash-monad-mcp": "dist/index.js" },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node20 --outfile=dist/index.js --banner:js='#!/usr/bin/env node' --external:@modelcontextprotocol/sdk --external:viem --external:zod --external:leash-monad",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "leash-monad": "^0.1.1",
+    "viem": "^2.20.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": { "esbuild": "^0.21.0", "typescript": "^5.6.0", "@types/node": "^22.0.0" }
+}

@@ -91,6 +91,16 @@ async function fund(to: Address, target: bigint) {
   }
 }
 
+/** "Leash your own agent": once the owner's passkey has leashed an agent to this account, give that agent a little MON
+ *  for gas so it can pay without the owner touching a wallet. Only ever for an agent the hub links to this account. */
+export async function fundOwnAgent(account: Address, agent: Address) {
+  const linked = await pub.readContract({ address: NET.hub, abi: hubAbi, functionName: "accountOf", args: [agent] });
+  if (linked.toLowerCase() !== account.toLowerCase()) throw new Error("that agent isn't leashed to this account yet");
+  const before = await pub.getBalance({ address: agent });
+  if (before < parseEther(DEMO.ownAgentGasMon) / 2n) await fund(agent, parseEther(DEMO.ownAgentGasMon));
+  return { agent, gasMon: Number(await pub.getBalance({ address: agent })) / 1e18 };
+}
+
 const ALLOWED_OPS = new Set(["leash", "revoke", "setCap", "setSeller", "setBrief"]);
 
 /** Submit a passkey-signed owner action. Refuses anything but leash management (no withdraw via the demo relayer). */

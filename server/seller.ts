@@ -19,8 +19,12 @@ export async function forecast() {
   return { block: block.toString(), gasPriceGwei: Number(gas) / 1e9, next10BlocksInSeconds: 4, note: "Paid for through a Leash, verified on Monad." };
 }
 
+// One payment buys one forecast. This demo keeps used payments in memory (per serverless instance) and refuses any
+// payment older than 5 minutes; a production seller passes a claim() backed by its database.
+const used = new Set<string>();
+const claim = (tx: string) => (used.has(tx) ? false : (used.add(tx), true));
 export async function gate(req: { method: string; url: string; headers: Record<string, any> }) {
-  return leashGate(req, { seller: sellerAddress(), priceUsd: PRICE, resource: RESOURCE, network });
+  return leashGate(req, { seller: sellerAddress(), priceUsd: PRICE, resource: RESOURCE, network, claim, maxPaymentAgeSeconds: 300 });
 }
 
 /** The judge's agent buys one forecast the honest way: 402, pay inside the leash, retry, 200. Every stage is returned. */

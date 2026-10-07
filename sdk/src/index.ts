@@ -80,7 +80,16 @@ export type GateResult =
  *   agent pays through its Leash (one tx), then retries with x-leash-payment: <txHash>
  *   2nd request: the gate checks the receipt's Paid event (agent, seller, amount >= price, ref) -> allow
  */
-export async function leashGate(req: GateRequest, cfg: { seller: Address; priceUsd: string; resource?: string } & Options): Promise<GateResult> {
+export type GateConfig = {
+  seller: Address; priceUsd: string; resource?: string;
+  /** Refuse payments mined longer ago than this (default 300 s). Limits how long one payment proof stays usable. */
+  maxPaymentAgeSeconds?: number;
+  /** Record a payment as used; return false if it was already used. Plug in your store (Redis, a DB row) so one
+   *  payment buys exactly one response. Without it, a payment can be replayed until it is maxPaymentAgeSeconds old. */
+  claim?: (tx: Hex) => boolean | Promise<boolean>;
+} & Options;
+
+export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<GateResult> {
   const h = (k: string) => { const v = req.headers[k] ?? req.headers[k.toLowerCase()]; return Array.isArray(v) ? v[0] : v; };
   const resource = cfg.resource ?? new URL(req.url, "http://x").pathname;
   const agent = h("x-leash-agent") as Address | undefined;
@@ -100,6 +109,10 @@ export async function leashGate(req: GateRequest, cfg: { seller: Address; priceU
   const client = clientFor(cfg);
   const rc = await client.getTransactionReceipt({ hash: payment }).catch(() => null);
   if (!rc || rc.status !== "success") return { allow: false, status: 402, body: { error: "payment_not_found", ref } };
+  const mined = await client.getBlock({ blockNumber: rc.blockNumber });
+  if (Date.now() / 1000 - Number(mined.timestamp) > (cfg.maxPaymentAgeSeconds ?? 300)) {
+    return { allow: false, status: 402, body: { error: "payment_expired", ref, reason: "That payment is too old to use again. Pay for this request." } };
+  }
   const d = cfg.decimals ?? 6, need = parseUnits(cfg.priceUsd, d);
   for (const log of rc.logs) {
     try {
@@ -109,6 +122,9 @@ export async function leashGate(req: GateRequest, cfg: { seller: Address; priceU
       const account = await client.readContract({ address: net(cfg).hub, abi: hubAbi, functionName: "accountOf", args: [agent] });
       if (log.address.toLowerCase() === account.toLowerCase() && a.agent.toLowerCase() === agent.toLowerCase()
         && a.seller.toLowerCase() === cfg.seller.toLowerCase() && a.amount >= need && a.ref === ref) {
+        if (cfg.claim && !(await cfg.claim(payment))) {
+          return { allow: false, status: 402, body: { error: "payment_used", ref, reason: "That payment was already used. Pay for this request." } };
+        }
         const verdict = await checkAgent(agent, cfg.seller, "0", cfg);
         return { allow: true, agent, paid: formatUnits(a.amount, d), tx: payment, verdict };
       }
