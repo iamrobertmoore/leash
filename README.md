@@ -78,6 +78,11 @@ The full threat table, with the code and test for each row, and gas for every ac
 - The demo spends a test dollar (`tUSD`, 6 decimals) deployed for this, not real USDC. The token is a parameter of each leash.
 - The daily budget resets at 00:00 UTC.
 
+## Add it to your API in ten minutes
+
+[`examples/`](examples) has runnable sellers for Express and Next.js, a check-only integration, and an agent that pays.
+The seller side is one function, `leashGate()`; the full guide is in the [SDK README](sdk/README.md).
+
 ## Run it
 
 ```bash

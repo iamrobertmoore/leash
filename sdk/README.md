@@ -48,6 +48,17 @@ app.get("/api/forecast", async (req, res) => {
 
 A revoked, expired or over-cap agent gets a 403 with the reason before you've done any work.
 
+**One payment, one response.** Pass `claim` so a payment can't be replayed: it receives the payment's tx hash and
+returns `false` if you've seen it before (a unique row in your database is enough). Payments older than
+`maxPaymentAgeSeconds` (default 300) are refused either way.
+
+```ts
+const g = await leashGate(req, { seller: MY_ADDRESS, priceUsd: "1", claim: (tx) => db.insertIfNew("payments", tx) });
+```
+
+Full examples, each runnable: [Express](../examples/express-seller.mjs), [Next.js route](../examples/next-route.ts),
+[check only](../examples/check-before-serving.mjs), [agent side](../examples/agent-pays.mjs).
+
 ## Pay (agent)
 
 ```ts
@@ -60,6 +71,14 @@ const res = await fetchWithLeash("https://leash-monad.vercel.app/api/forecast", 
 
 On a 402 it pays inside the leash and retries once. If the leash says no, the payment reverts on-chain and
 nothing leaves the account.
+
+## Getting a leashed agent
+
+1. `npx leash-monad-mcp --new-key` prints a fresh agent address and key (or use any key your agent already has).
+2. Open [leash-monad.vercel.app/own.html](https://leash-monad.vercel.app/own.html), sign in with a passkey and leash
+   that address: daily cap, sellers, expiry, demo dollars or USDC.
+3. Use the key with `fetchWithLeash` / `payWithLeash`, or give it to an MCP client through
+   [`leash-monad-mcp`](https://www.npmjs.com/package/leash-monad-mcp).
 
 ## Networks
 
