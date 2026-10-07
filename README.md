@@ -31,7 +31,8 @@ what it can still spend today, and whether this payment will go through. No API 
 | A payment over the cap is refused on-chain | A refused `pay` from a real run: [`0xb01a…262d`](https://monadvision.com/tx/0xb01a00fd15251076160cca7f44a38e5b024955357df7159c44c3124c6634262d) shows "execution reverted" |
 | The passkey is checked by Monad's P256 precompile | `LeashAccount.ownerExecute` → Solady `WebAuthn.verify` → `staticcall` to `0x0100`. Measured 7,282 gas per verification vs 355,149 for a Solidity verifier on the same chain |
 | Every agent is a real ERC-8004 identity | Agents are registered in Monad's Identity Registry `0x8004A169…a432`; the first on this hub is #10299 |
-| The contracts do what this README says | `npm i && npx hardhat test` runs 10 tests, with the P256 precompile switched on locally |
+| The deployed code is this code | `LeashHub`, the `LeashAccount` implementation and `tUSD` are source-verified (full match) on MonadVision: [hub](https://monadvision.com/contracts/full_match/143/0x64a489074dd6a4b3b977e5f635a178366a8c12c3/), [account](https://monadvision.com/contracts/full_match/143/0xe39E32C8c834B06d8Ca9f5f2120BC042242D053a/), [tUSD](https://monadvision.com/contracts/full_match/143/0x4adf40e6e5113339635e6dc54ff638e7b63bbea3/) |
+| The contracts do what this README says | `npm i && npx hardhat test` runs 22 tests with the P256 precompile switched on locally, including 1,500 random steps (payments, day changes, cap and allow-list changes) where the seller check must predict every payment's outcome, and every way a stolen agent key might try to get money out ([`test/properties.test.ts`](test/properties.test.ts)) |
 
 ## How Monad is used
 
@@ -61,6 +62,21 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 - `contracts/LeashHub.sol`: creates accounts at a deterministic address per passkey and answers the seller's check.
 - `sdk/`: `checkAgent`, `leashGate` (x402-style 402 until paid), `payWithLeash`, `fetchWithLeash`.
 - `app/` + `api/`: the live site and a relayer that pays gas so a judge needs nothing but a passkey.
+
+## What already exists, and what Leash adds
+
+Spending limits for agents aren't new. Coinbase Spend Permissions, MetaMask delegations, Safe allowance modules and
+session-key wallets (ZeroDev and others) all let an owner cap what a key can spend, and several Metropolis entries pair
+passkeys with agent caps too. Attest8004, also in Metropolis, gates each agent action on independent validators' verdicts.
+
+Leash's bet is narrower:
+
+- **The cap lives inside the payment.** There is no separate approval step to skip; `pay()` is the only way an agent key
+  moves money, and it checks the leash in the same call.
+- **The seller can ask first.** One synchronous view call, `check(agent, seller, amount)`, says whether this exact
+  payment would go through, with no validator round trip, API key or Leash server. It's wrapped as a 402 gate on npm.
+- **The owner is a passkey that Monad itself verifies**, through the `0x0100` precompile, and every agent is in the
+  canonical ERC-8004 registry on mainnet.
 
 ## Limits
 

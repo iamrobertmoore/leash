@@ -20,5 +20,8 @@ const config: HardhatUserConfig = {
       accounts: process.env.DEPLOYER_KEY ? [process.env.DEPLOYER_KEY] : [],
     },
   },
+  // Source verification on MonadVision (Sourcify). No Etherscan key needed.
+  sourcify: { enabled: true, apiUrl: "https://sourcify-api-monad.blockvision.org", browserUrl: "https://monadvision.com" },
+  etherscan: { enabled: false },
 };
 export default config;
