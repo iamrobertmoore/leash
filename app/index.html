@@ -8,7 +8,7 @@
 <div class="fx haze"></div><div class="fx grain"></div><div class="fx scan"></div>
 <section class="hero"><canvas id="scene"></canvas>
  <nav><a class="logo" href="/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" stroke="#F2F2F3" stroke-width="2"/><path d="M11 11 C 15 14, 17 16, 21 21" stroke="#8B90FF" stroke-width="2"/></svg>Leash</a>
-  <div class="r"><a href="#sellers">Sellers</a><a href="/own.html">Your agent</a><a href="#sdk">SDK</a><a href="https://github.com/iamrobertmoore/leash">GitHub</a><span class="live"><i></i><span id="net"></span> <b id="blk">—</b></span></div></nav>
+  <div class="r"><a href="#sellers">Sellers</a><a href="#agents">Your agent</a><a href="#sdk">SDK</a><a href="https://github.com/iamrobertmoore/leash">GitHub</a><span class="live"><i></i><span id="net"></span> <b id="blk">—</b></span></div></nav>
  <div class="copy"><div class="k">18 Mar 2025 · an AI agent was hijacked</div>
   <h1>It lost <span class="r">55&nbsp;ETH</span>.<br>On a Leash: <span class="px">$5</span>.</h1>
   <p class="lede">Your passkey sets each agent's daily budget. <b>Monad checks it on every payment</b>, and anyone can read it before they get paid. Past the limit, the chain says no.</p>
@@ -49,6 +49,23 @@
 <span class="c">// or the whole x402-style flow as middleware</span>
 <span class="k2">const</span> g = <span class="k2">await</span> leashGate(req, { seller: me, priceUsd: <span class="s">"1"</span> });
 <span class="k2">if</span> (!g.allow) <span class="k2">return</span> res.status(g.status).json(g.body); <span class="c">// <span class="n">402</span> / <span class="n">403</span></span></pre>
+</section>
+<section class="band" id="agents">
+ <div class="col"><div class="k ac">For your agents</div><h2>Any agent, on a leash, in two minutes.</h2>
+  <p>Claude, Cursor or any MCP client gets <b>pay</b> and <b>fetch_paid</b> tools that can't spend past the daily cap your passkey set. Whatever the model is told, by you or by a prompt injection, the contract has the last word.</p>
+  <p class="try"><a class="btn" href="/own.html">Leash your own agent →</a></p></div>
+ <pre class="code"><span class="c">// npx leash-monad-mcp --new-key, leash it at /own.html, then:</span>
+{
+  <span class="s">"mcpServers"</span>: {
+    <span class="s">"leash"</span>: {
+      <span class="s">"command"</span>: <span class="s">"npx"</span>,
+      <span class="s">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"leash-monad-mcp"</span>],
+      <span class="s">"env"</span>: { <span class="s">"LEASH_AGENT_KEY"</span>: <span class="s">"0x…"</span> }
+    }
+  }
+}
+<span class="c">// "buy a forecast from leash-monad.vercel.app/api/forecast"</span>
+<span class="c">// → paid $1 inside the leash · 200 OK · $2.00 left today</span></pre>
 </section>
 <section class="net" id="network" hidden>
  <div class="k ac">Live on Monad · indexed by Envio</div>

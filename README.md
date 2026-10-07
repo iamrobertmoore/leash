@@ -2,6 +2,7 @@
 
 <h1 align="center">Leash</h1>
 <p align="center"><b>Spend limits for AI agents, set with your passkey and enforced on Monad.</b></p>
+<p align="center"><a href="https://github.com/iamrobertmoore/leash/actions/workflows/test.yml"><img src="https://github.com/iamrobertmoore/leash/actions/workflows/test.yml/badge.svg" alt="tests"></a> <a href="https://www.npmjs.com/package/leash-monad"><img src="https://img.shields.io/npm/v/leash-monad?label=leash-monad" alt="npm leash-monad"></a> <a href="https://www.npmjs.com/package/leash-monad-mcp"><img src="https://img.shields.io/npm/v/leash-monad-mcp?label=leash-monad-mcp" alt="npm leash-monad-mcp"></a></p>
 <p align="center"><a href="https://leash-monad.vercel.app">Live site (Monad mainnet)</a> · <a href="sdk/README.md">SDK: <code>leash-monad</code></a> · <a href="mcp/README.md">MCP server</a> · <a href="#verify-it-in-five-minutes">Verify it</a> · <a href="docs/SECURITY.md">Threats &amp; gas</a> · <a href="#how-monad-is-used">How Monad is used</a></p>
 
 ---
