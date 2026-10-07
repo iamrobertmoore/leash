@@ -63,18 +63,12 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 - `sdk/`: `checkAgent`, `leashGate` (x402-style 402 until paid), `payWithLeash`, `fetchWithLeash`.
 - `app/` + `api/`: the live site and a relayer that pays gas so a judge needs nothing but a passkey.
 
-## What already exists, and what Leash adds
-
-Spending limits for agents aren't new. Coinbase Spend Permissions, MetaMask delegations, Safe allowance modules and
-session-key wallets (ZeroDev and others) all let an owner cap what a key can spend, and several Metropolis entries pair
-passkeys with agent caps too. Attest8004, also in Metropolis, gates each agent action on independent validators' verdicts.
-
-Leash's bet is narrower:
+## What makes Leash different
 
 - **The cap lives inside the payment.** There is no separate approval step to skip; `pay()` is the only way an agent key
   moves money, and it checks the leash in the same call.
 - **The seller can ask first.** One synchronous view call, `check(agent, seller, amount)`, says whether this exact
-  payment would go through, with no validator round trip, API key or Leash server. It's wrapped as a 402 gate on npm.
+  payment would go through, with no API key and no Leash server in the path. It's wrapped as a 402 gate on npm.
 - **The owner is a passkey that Monad itself verifies**, through the `0x0100` precompile, and every agent is in the
   canonical ERC-8004 registry on mainnet.
 
