@@ -18,7 +18,7 @@ export const STATUS = ["OK", "UNKNOWN_AGENT", "REVOKED", "EXPIRED", "SELLER_NOT_
 export type LeashStatus = (typeof STATUS)[number];
 
 export type Options = { network?: LeashNetwork | keyof typeof networks; client?: PublicClient; decimals?: number };
-const net = (o: Options = {}) => (typeof o.network === "string" ? networks[o.network] : o.network) ?? networks.mainnet;
+const net = (o: Options = {}): LeashNetwork => (typeof o.network === "string" ? networks[o.network] : o.network) ?? networks.mainnet;
 const clientFor = (o: Options = {}) => o.client ?? (createPublicClient({ transport: http(net(o).rpc) }) as PublicClient);
 
 export type Verdict = {
@@ -87,6 +87,9 @@ export type GateConfig = {
   /** Record a payment as used; return false if it was already used. Plug in your store (Redis, a DB row) so one
    *  payment buys exactly one response. Without it, a payment can be replayed until it is maxPaymentAgeSeconds old. */
   claim?: (tx: Hex) => boolean | Promise<boolean>;
+  /** Tokens you accept as payment. Default: the network's USDC and the Leash test dollar. A leash can name any
+   *  ERC-20, so without this check an agent could "pay" in a token worth nothing. */
+  acceptTokens?: Address[];
 } & Options;
 
 export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<GateResult> {
@@ -120,6 +123,10 @@ export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<Gate
       if (ev.eventName !== "Paid") continue;
       const a = ev.args;
       const account = await client.readContract({ address: net(cfg).hub, abi: hubAbi, functionName: "accountOf", args: [agent] });
+      const accepted = (cfg.acceptTokens ?? [net(cfg).usdc, net(cfg).testUsd]).filter(Boolean).map((t) => t!.toLowerCase());
+      if (!accepted.includes(a.token.toLowerCase())) {
+        return { allow: false, status: 402, body: { error: "token_not_accepted", ref, reason: "That payment was in a token this seller doesn't accept." } };
+      }
       if (log.address.toLowerCase() === account.toLowerCase() && a.agent.toLowerCase() === agent.toLowerCase()
         && a.seller.toLowerCase() === cfg.seller.toLowerCase() && a.amount >= need && a.ref === ref) {
         if (cfg.claim && !(await cfg.claim(payment))) {

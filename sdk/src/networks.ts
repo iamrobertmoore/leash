@@ -8,6 +8,8 @@ export type LeashNetwork = {
   hub: Address;
   identityRegistry: Address;
   testUsd?: Address;
+  /** Circle's USDC on this network, when there is one. */
+  usdc?: Address;
 };
 
 /** Live deployments. Mainnet is the default everywhere in this package. */
@@ -17,6 +19,7 @@ export const networks = {
     hub: "0x64a489074dd6a4b3b977e5f635a178366a8c12c3",
     identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
     testUsd: "0x4adf40e6e5113339635e6dc54ff638e7b63bbea3",
+    usdc: "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
   },
   testnet: {
     name: "Monad Testnet", chainId: 10143, rpc: "https://testnet-rpc.monad.xyz", explorer: "https://testnet.monadvision.com",

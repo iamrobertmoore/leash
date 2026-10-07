@@ -50,7 +50,8 @@ A revoked, expired or over-cap agent gets a 403 with the reason before you've do
 
 **One payment, one response.** Pass `claim` so a payment can't be replayed: it receives the payment's tx hash and
 returns `false` if you've seen it before (a unique row in your database is enough). Payments older than
-`maxPaymentAgeSeconds` (default 300) are refused either way.
+`maxPaymentAgeSeconds` (default 300) are refused either way, and so are payments in any token outside
+`acceptTokens` (default: USDC and the Leash test dollar), because a leash can name any ERC-20.
 
 ```ts
 const g = await leashGate(req, { seller: MY_ADDRESS, priceUsd: "1", claim: (tx) => db.insertIfNew("payments", tx) });

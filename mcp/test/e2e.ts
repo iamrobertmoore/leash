@@ -51,7 +51,7 @@ const network = { name: "local", chainId: 31337, rpc: RPC, explorer: "http://loc
 const used = new Set<string>();
 const claim = (tx: string) => (used.has(tx) ? false : (used.add(tx), true));
 const api = http.createServer(async (req, res) => {
-  const g = await leashGate({ method: req.method!, url: req.url!, headers: req.headers }, { seller: SELLER, priceUsd: "1", network, claim });
+  const g = await leashGate({ method: req.method!, url: req.url!, headers: req.headers }, { seller: SELLER, priceUsd: "1", network, claim, acceptTokens: [tusd.address] });
   res.setHeader("content-type", "application/json");
   if (!g.allow) { res.statusCode = g.status; return res.end(JSON.stringify(g.body)); }
   res.end(JSON.stringify({ forecast: "sunny", paid: g.paid }));
@@ -91,6 +91,25 @@ assert.equal(r.json.status, 200); assert.equal(r.json.paid, true); assert.match(
   console.log("\nreplayed payment proof refused: payment_used");
 }
 
+// a leash that pays in some other token can't buy anything: the gate checks the token
+{
+  const junk = await deploy("TestUSD");
+  await send(junk.address, junk.abi, "mint", [account, usd(50)]);
+  const rogue = privateKeyToAccount("0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a");
+  const op2 = encodeFunctionData({ abi: acctAbi, functionName: "leash", args: [rogue.address, junk.address, usd(5), BigInt(now + 86400), [SELLER], ""] });
+  const n2 = await pub.readContract({ address: account, abi: acctAbi, functionName: "nonce" });
+  const d2 = await pub.readContract({ address: account, abi: acctAbi, functionName: "opDigest", args: [op2, n2] }) as Hex;
+  await send(account, acctAbi, "ownerExecute", [op2, pk.sign(d2)]);
+  await w.sendTransaction({ to: rogue.address, value: 10n ** 17n }).then((h) => pub.waitForTransactionReceipt({ hash: h }));
+  const nonce = toHex(crypto.getRandomValues(new Uint8Array(12)));
+  const h = { "x-leash-agent": rogue.address, "x-leash-nonce": nonce, "x-leash-proof": await rogue.signMessage({ message: proofMessage("/forecast", nonce) }) };
+  const ask = await (await fetch("http://127.0.0.1:8799/forecast", { headers: h })).json();
+  const tx = await payWithLeash(rogue, ask.payTo, ask.price, ask.ref, { network });
+  const res = await fetch("http://127.0.0.1:8799/forecast", { headers: { ...h, "x-leash-payment": tx } });
+  assert.equal(res.status, 402); assert.equal((await res.json()).error, "token_not_accepted");
+  console.log("payment in an unaccepted token refused: token_not_accepted");
+}
+
 r = await call("pay", { seller: SELLER, amount_usd: "1", memo: "tip" });
 assert.equal(r.json.paid, true); assert.equal(r.json.remainingTodayUsd, "1");
 
@@ -115,7 +134,7 @@ assert.ok(r.error); assert.match(r.text, /OVER_CAP/);
 r = await call("check_agent", { agent: agent.address, seller: SELLER, amount_usd: "1" });
 assert.equal(r.json.status, "OVER_CAP"); assert.equal(r.json.remainingTodayUsd, "0");
 
-const paid = await pub.readContract({ address: tusd.address, abi: tusd.abi, functionName: "balanceOf", args: [SELLER] });
+const paid = await pub.readContract({ address: tusd.address, abi: tusd.abi, functionName: "balanceOf", args: [SELLER] }) as bigint;
 assert.equal(paid, usd(4));
-console.log("\nALL MCP CHECKS PASSED: $4 paid in total (the cap), every overspend and the replayed payment refused.");
+console.log("\nALL MCP CHECKS PASSED: $4 paid in total (the cap); every overspend, the replayed payment and the wrong token refused.");
 await client.close(); api.close(); process.exit(0);
