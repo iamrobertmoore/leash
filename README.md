@@ -52,17 +52,13 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 
 ## How it works
 
-```
- owner passkey ──(WebAuthn, P256 @0x0100)──▶ LeashAccount ──register──▶ ERC-8004 Identity Registry
-                                               │  leash(agent, $/day, sellers, expiry)
- agent key ──────────── pay(seller, $, ref) ──▶│  checks the leash, then transfers or reverts
-                                               │
- seller ── leashGate / checkAgent ──▶ LeashHub.check(agent, seller, $) ──▶ OK / OVER_CAP / REVOKED / …
-```
+<img src="docs/architecture.svg" alt="Owner passkey and agent key on the left, the LeashAccount in the middle enforcing the leash inside every payment, sellers checking LeashHub first, agents registered in ERC-8004, and an Envio indexer turning events into an agent track record." width="100%">
 
 - `contracts/LeashAccount.sol`: one account per passkey. Owner actions arrive with a WebAuthn assertion; anyone can relay them.
 - `contracts/LeashHub.sol`: creates accounts at a deterministic address per passkey and answers the seller's check.
-- `sdk/`: `checkAgent`, `leashGate` (x402-style 402 until paid), `payWithLeash`, `fetchWithLeash`.
+- `sdk/`: `checkAgent`, `leashGate` (x402-style 402 until paid, one payment per response), `payWithLeash`, `fetchWithLeash`.
+- `mcp/`: `leash-monad-mcp`, the MCP server: `check_agent`, `my_budget`, `pay`, `fetch_paid`.
+- `indexer/`: the Envio HyperIndex indexer behind the track record and the live network view.
 - `app/` + `api/`: the live site and a relayer that pays gas so a judge needs nothing but a passkey.
 
 ## What makes Leash different
