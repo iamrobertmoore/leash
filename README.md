@@ -27,6 +27,8 @@ what it can still spend today, and whether this payment will go through. No API 
 
 ## Verify it in five minutes
 
+Or in ten seconds: `npm i && npm run verify` checks each row below against Monad mainnet, live, with no keys ([`scripts/verify.ts`](scripts/verify.ts)).
+
 | Claim | How to check |
 |---|---|
 | It's live on Monad mainnet | `LeashHub` [`0x64a4…12c3`](https://monadvision.com/address/0x64a489074dd6a4b3b977e5f635a178366a8c12c3) on chain 143 |
