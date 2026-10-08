@@ -2,7 +2,7 @@
 import { isAddress, getAddress, type Address } from "viem";
 import { NET, USDC, STATUS } from "./config";
 import { createPasskey, passkeySupported, resumePasskey, type Signer } from "./passkey";
-import { setupOwn, leashOwn, fundOwn, revokeOwn, sellerCheck } from "./chain";
+import { setupOwn, leashOwn, fundOwn, revokeOwn, sellerCheck, withdrawOwn, tokenBalance } from "./chain";
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const short = (h: string) => h.slice(0, 6) + "…" + h.slice(-4);
@@ -23,7 +23,26 @@ $("pk").onclick = () => busy($("pk") as HTMLButtonElement, $("o1"), async () => 
   account = (await setupOwn(signer)).account;
   $("acct").innerHTML = link("address", account);
   $("o1").textContent = "Ready. Your account holds $20 of demo dollars to start.";
-  $("c3").classList.remove("dim");
+  $("c3").classList.remove("dim"); $("c5").classList.remove("dim");
+  balances();
+});
+
+async function balances() {
+  const [u, t] = await Promise.all([tokenBalance(USDC, account!), tokenBalance(NET.token, account!)]);
+  $("bal").textContent = `$${(Number(u) / 1e6).toFixed(2)} USDC and $${(Number(t) / 1e6).toFixed(2)} demo dollars`;
+  return { u, t };
+}
+
+$("wd").onclick = () => busy($("wd") as HTMLButtonElement, $("o5"), async () => {
+  const to = ($("to") as HTMLInputElement).value.trim();
+  if (!isAddress(to)) throw new Error("Paste the wallet address you want the money sent to.");
+  const { u, t } = await balances();
+  if (u === 0n && t === 0n) throw new Error("There's nothing in this account to withdraw.");
+  const out: string[] = [];
+  if (u > 0n) { $("o5").textContent = "Sign the USDC withdrawal with your passkey…"; const r = await withdrawOwn(signer!, account!, USDC, getAddress(to), u); out.push(`$${(Number(u) / 1e6).toFixed(2)} USDC · ${link("tx", r.hash)}`); }
+  if (t > 0n && u === 0n) { $("o5").textContent = "Sign the demo-dollar withdrawal with your passkey…"; const r = await withdrawOwn(signer!, account!, NET.token, getAddress(to), t); out.push(`$${(Number(t) / 1e6).toFixed(2)} tUSD · ${link("tx", r.hash)}`); }
+  $("o5").innerHTML = `Sent to ${link("address", to)}: ${out.join(" · ")}`;
+  await balances();
 });
 
 $("sign").onclick = () => busy($("sign") as HTMLButtonElement, $("o3"), async () => {

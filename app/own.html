@@ -37,6 +37,7 @@ input:focus{outline:none;border-color:var(--accent)}
   <p>Your passkey is the owner. No seed phrase, no wallet extension.</p>
   <div class="actions"><button class="btn p" id="pk">Use my passkey</button></div>
   <div class="row" style="margin-top:12px"><span>your Leash account</span><b id="acct">—</b></div>
+  <p style="margin-top:10px;font-size:13px">Fund this account, not the agent. The agent spends from here, inside its leash.</p>
   <div class="out" id="o1"></div>
  </div>
 
@@ -53,6 +54,14 @@ input:focus{outline:none;border-color:var(--accent)}
   </div>
   <div class="actions"><button class="btn p" id="sign">Sign the leash with my passkey</button></div>
   <div class="out" id="o3"></div>
+ </div>
+
+ <div class="card dim" id="c5">
+  <h3>Take your money out</h3>
+  <p>Your account holds <b id="bal">—</b>. Withdrawing needs your passkey; nobody else can. Real USDC goes first; demo dollars only if that's all there is.</p>
+  <div class="grid"><div class="full"><label for="to">Send it to (your wallet address)</label><input type="text" id="to" placeholder="0x…" autocomplete="off" spellcheck="false"></div></div>
+  <div class="actions"><button class="btn" id="wd">Withdraw with my passkey</button></div>
+  <div class="out" id="o5"></div>
  </div>
 
  <div class="card dim" id="c4">

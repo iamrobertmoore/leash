@@ -74,7 +74,7 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 
 The full threat table, with the code and test for each row, and gas for every action: [`docs/SECURITY.md`](docs/SECURITY.md).
 
-- The demo relayer pays gas and funds demo agents; it only relays leash, revoke, cap and seller changes, and can't move an account's money.
+- The demo relayer pays gas and funds demo agents. It relays only what the owner's passkey signed (leash changes, revoke, the owner's own withdrawal), so it can't move an account's money by itself.
 - The demo spends a test dollar (`tUSD`, 6 decimals) deployed for this, not real USDC. The token is a parameter of each leash.
 - The daily budget resets at 00:00 UTC.
 

@@ -9,6 +9,7 @@ const accountAbi = parseAbi([
   "function leash(address agent, address token, uint128 dailyCap, uint64 expiry, address[] sellers, string agentURI) returns (uint256)",
   "function revoke(address agent)",
   "function setBrief(address agent, bytes sealedBrief)",
+  "function withdraw(address token, address to, uint256 amount)",
 ]);
 const hubAbi = parseAbi(["function check(address agent, address seller, uint256 amount) view returns (uint8, uint256, uint64, uint256, address)"]);
 
@@ -40,6 +41,10 @@ export const leashOwn = (s: Signer, account: Address, a: { agent: Address; token
   }));
 export const fundOwn = (account: Address, agent: Address) => api<{ gasMon: number }>("own", { account, agent });
 export const revokeOwn = (s: Signer, account: Address, agent: Address) => owner(s, account, encodeFunctionData({ abi: accountAbi, functionName: "revoke", args: [agent] }));
+export const withdrawOwn = (s: Signer, account: Address, token: Address, to: Address, amount: bigint) =>
+  owner(s, account, encodeFunctionData({ abi: accountAbi, functionName: "withdraw", args: [token, to, amount] }));
+const erc20 = parseAbi(["function balanceOf(address) view returns (uint256)"]);
+export const tokenBalance = (token: Address, who: Address) => pub.readContract({ address: token, abi: erc20, functionName: "balanceOf", args: [who] });
 export const buyForecast = (st: Setup) => api<any>("buy", { account: st.account });
 export const runAttack = (st: Setup) => api<{ leashed: Hex[]; unleashed: Hex[] }>("attack", { account: st.account });
 

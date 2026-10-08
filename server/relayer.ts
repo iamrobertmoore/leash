@@ -101,9 +101,10 @@ export async function fundOwnAgent(account: Address, agent: Address) {
   return { agent, gasMon: Number(await pub.getBalance({ address: agent })) / 1e18 };
 }
 
-const ALLOWED_OPS = new Set(["leash", "revoke", "setCap", "setSeller", "setBrief"]);
+// Everything here is authorised by the owner's passkey signature, which the contract checks; the relayer only pays gas.
+const ALLOWED_OPS = new Set(["leash", "revoke", "setCap", "setSeller", "setBrief", "withdraw"]);
 
-/** Submit a passkey-signed owner action. Refuses anything but leash management (no withdraw via the demo relayer). */
+/** Submit a passkey-signed owner action: leash management, or the owner taking their own money out. */
 export async function submitOwner(account: Address, op: Hex, auth: {
   authenticatorData: Hex; clientDataJSON: string; challengeIndex: string | bigint; typeIndex: string | bigint; r: Hex; s: Hex;
 }) {

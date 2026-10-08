@@ -15,6 +15,7 @@ export const accountAbi = parseAbi([
   "function setCap(address agent, uint128 dailyCap, uint64 expiry)",
   "function setSeller(address agent, address seller, bool allowed)",
   "function setBrief(address agent, bytes sealedBrief)",
+  "function withdraw(address token, address to, uint256 amount)",
   "function pay(address seller, uint256 amount, bytes32 ref)",
   "function leashes(address) view returns (address token, uint128 dailyCap, uint128 spentToday, uint64 day, uint64 expiry, uint64 agentId, bool active, bool anySeller)",
   "function check(address agent, address seller, uint256 amount) view returns (uint8, uint256, uint64, uint256)",
