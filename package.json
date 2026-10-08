@@ -6,7 +6,9 @@
     "test": "hardhat test",
     "build": "vite build",
     "test:mcp": "tsx mcp/test/e2e.ts",
-    "verify": "tsx scripts/verify.ts"
+    "verify": "tsx scripts/verify.ts",
+    "mutate": "tsx scripts/mutate.ts",
+    "proofs": "tsx scripts/proofs.ts"
   },
   "keywords": [],
   "author": "Robert Moore",

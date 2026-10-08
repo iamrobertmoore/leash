@@ -18,7 +18,7 @@ export type WebAuthnAuth = {
 
 const b64url = (b: Buffer) => b.toString("base64url");
 
-export function softPasskey(opts: { rpId?: string; origin?: string; privateKeyPem?: string } = {}): SoftPasskey {
+export function softPasskey(opts: { rpId?: string; origin?: string; privateKeyPem?: string; flags?: number } = {}): SoftPasskey {
   const rpId = opts.rpId ?? "leash.local";
   const origin = opts.origin ?? `https://${rpId}`;
   const key = opts.privateKeyPem
@@ -34,7 +34,7 @@ export function softPasskey(opts: { rpId?: string; origin?: string; privateKeyPe
     y,
     sign(challenge: Hex): WebAuthnAuth {
       const rpIdHash = crypto.createHash("sha256").update(rpId).digest();
-      const flags = Buffer.from([0x05]); // UP | UV
+      const flags = Buffer.from([opts.flags ?? 0x05]); // UP | UV (tests can drop UV to prove it is required)
       const count = Buffer.alloc(4);
       count.writeUInt32BE(++counter);
       const authenticatorData = Buffer.concat([rpIdHash, flags, count]);

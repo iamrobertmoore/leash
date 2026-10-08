@@ -9,8 +9,8 @@ the agent pays can tell. Every row below points at the code that enforces it and
 |---|---|---|---|
 | The agent's key is stolen, or its model is prompt-injected | The key can only call `pay()`, which checks the leash in the same call: daily cap (resets 00:00 UTC), allowed sellers, expiry, revoked. At worst the attacker spends one day's cap | `LeashAccount.pay`, `_status` | `properties.test.ts` "a stolen agent key has no way out"; leash.test.ts drain script |
 | The stolen key tries owner functions (raise the cap, add itself as a seller, withdraw) | Every owner function is `onlySelf`: reachable only through `ownerExecute` with a valid passkey signature | `LeashAccount.onlySelf`, `ownerExecute` | `properties.test.ts`, `leash.test.ts` "direct calls to owner functions" |
-| Someone signs an owner action with a different passkey | WebAuthn verification against the account's own P-256 key, through Monad's `0x0100` precompile, with user verification required | `ownerExecute` → Solady `WebAuthn.verify` | `leash.test.ts` "wrong passkey"; `properties.test.ts` forged passkey |
-| A valid owner signature is replayed (same account, another account, another chain) | The signed digest is `keccak(chainid, account, nonce, keccak(op))`; the nonce increments on use | `LeashAccount.opDigest` | `leash.test.ts` "replayed signature" |
+| Someone signs an owner action with a different passkey | WebAuthn verification against the account's own P-256 key, through Monad's `0x0100` precompile, with user verification required | `ownerExecute` → Solady `WebAuthn.verify` | `leash.test.ts` "wrong passkey"; `properties.test.ts` forged passkey; `rules.test.ts` "requires user verification" |
+| A valid owner signature is replayed (same account, another account, another chain) | The signed digest is `keccak(chainid, account, nonce, keccak(op))`; the nonce increments on use | `LeashAccount.opDigest` | `leash.test.ts` "replayed signature"; `rules.test.ts` bound to its action, bound to its account, nonce order |
 | The relayer is malicious or compromised | It can only submit what the passkey signed. It can't forge, change or replay an owner action. If it refuses to relay, the owner can submit `ownerExecute` from any address | `server/relayer.ts` `ALLOWED_OPS`; contract signature check | as above |
 | An agent pays one seller it was never allowed to pay | `SellerNotAllowed` unless the leash allows any seller | `_status` | `leash.test.ts` allow-list; 1,500 random steps in `properties.test.ts` |
 | The seller's check says OK but the leash changes before the payment lands | The check is advisory; `pay()` re-checks atomically. The gate only serves after it has seen the `Paid` event in a successful receipt | `sdk/src/index.ts` `leashGate` | `properties.test.ts`: check() must predict pay() at every random step |
@@ -18,6 +18,11 @@ the agent pays can tell. Every row below points at the code that enforces it and
 | An agent "pays" in a token it minted itself (a leash can name any ERC-20) | The gate only accepts payments in tokens the seller lists; by default the network's USDC and the Leash test dollar | `leashGate` `acceptTokens` | `mcp/test/e2e.ts` wrong token refused |
 | Someone else presents the agent's payment | The request must carry the agent's signature over `leash:<resource>:<nonce>`, and the payment's `ref` must match that nonce | `leashGate` | `mcp/test/e2e.ts` |
 | A refused payment is still charged | Refusals revert, so nothing moves. Monad charges gas on the gas *limit*, so the SDK sets a tight one (150k for `pay`). A refused payment cost 0.012 MON on mainnet | `payWithLeash` | mainnet tx in README |
+
+| Someone tries to claim an agent key already leashed to another account | The hub links each agent key to one account; a second claim reverts `AgentTaken` | `LeashHub.link` | `rules.test.ts` "one agent key belongs to one account" |
+| Someone initialises the bare implementation contract | Accounts are clones with their own storage; the implementation holds nothing and owns nothing | `LeashHub`, `initialize` | `rules.test.ts` "accounts cannot be re-initialised" |
+
+Each rule above is also broken on purpose, one at a time, to prove a test catches it: 23 of 23 caught ([`MUTATION.md`](MUTATION.md)).
 
 ## What it doesn't do
 

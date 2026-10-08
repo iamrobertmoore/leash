@@ -8,7 +8,7 @@
 <div class="fx haze"></div><div class="fx grain"></div><div class="fx scan"></div>
 <section class="hero"><canvas id="scene"></canvas>
  <nav><a class="logo" href="/"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" stroke="#F2F2F3" stroke-width="2"/><path d="M11 11 C 15 14, 17 16, 21 21" stroke="#8B90FF" stroke-width="2"/></svg>Leash</a>
-  <div class="r"><a href="#sellers">Sellers</a><a href="#agents">Your agent</a><a href="#sdk">SDK</a><a href="https://github.com/iamrobertmoore/leash">GitHub</a><span class="live"><i></i><span id="net"></span> <b id="blk">—</b></span></div></nav>
+  <div class="r"><a href="#sellers">Sellers</a><a href="#agents">Your agent</a><a href="#proof">Proof</a><a href="#sdk">SDK</a><a href="https://github.com/iamrobertmoore/leash">GitHub</a><span class="live"><i></i><span id="net"></span> <b id="blk">—</b></span></div></nav>
  <div class="copy"><div class="k">18 Mar 2025 · an AI agent was hijacked</div>
   <h1>It lost <span class="r">55&nbsp;ETH</span>.<br>On a Leash: <span class="px">$5</span>.</h1>
   <p class="lede">Your passkey sets each agent's daily budget. <b>Monad checks it on every payment</b>, and anyone can read it before they get paid. Past the limit, the chain says no.</p>
@@ -66,6 +66,18 @@
 }
 <span class="c">// "buy a forecast from leash-monad.vercel.app/api/forecast"</span>
 <span class="c">// → paid $1 inside the leash · 200 OK · $2.00 left today</span></pre>
+</section>
+<section class="band" id="proof">
+ <div class="col"><div class="k ac">Proof on Monad mainnet</div><h2>Every rule, refused by the contract.</h2>
+  <p>One allowed payment, then one attempt against each rule. Each refusal is a real transaction that reverted inside the account's <b>pay()</b>, with the contract's own reason. Not a server saying no.</p>
+  <p class="try">Check them all yourself: <code>npx leash-monad verify</code> re-reads each one from the chain. Reads only, about ten seconds.</p></div>
+ <div class="proofs">
+  <a class="pr ok" href="https://monadvision.com/tx/0x0a83fad1d979e858f413e56d616987cf6547826c116dea45c2dbc0f5947811ef" target="_blank" rel="noopener"><span>$1 to the API it may pay</span><b>PAID</b><i>0x0a83…11ef ↗</i></a>
+  <a class="pr no" href="https://monadvision.com/tx/0xea9896018b9028602c54f78d58dd4eb249aa82efedf5e6cd05d691db5b8a3736" target="_blank" rel="noopener"><span>$5 against a $3 daily cap</span><b>OverCap</b><i>0xea98…3736 ↗</i></a>
+  <a class="pr no" href="https://monadvision.com/tx/0x4a6163cb3832a88db0f00c202953f9fe0f6c9ec0795fa89e194d7112649a70e2" target="_blank" rel="noopener"><span>$1 to a seller not on its list</span><b>SellerNotAllowed</b><i>0x4a61…70e2 ↗</i></a>
+  <a class="pr no" href="https://monadvision.com/tx/0xbd4676240ad4052b9893b6e36b9bfedf1e0c5927659110bba5c125f5616de2ec" target="_blank" rel="noopener"><span>$1 after one-tap revoke</span><b>AgentRevoked</b><i>0xbd46…e2ec ↗</i></a>
+  <a class="pr no" href="https://monadvision.com/tx/0x833b033ee6ef089b0427637a565b221cc9da7dc8fe21ff2c2d8b7748ce638b12" target="_blank" rel="noopener"><span>$1 after its leash ran out</span><b>LeashExpired</b><i>0x833b…8b12 ↗</i></a>
+ </div>
 </section>
 <section class="net" id="network" hidden>
  <div class="k ac">Live on Monad · indexed by Envio</div>

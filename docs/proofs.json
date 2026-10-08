@@ -1,0 +1,57 @@
+{
+ "chainId": 143,
+ "account": "0x4b410E6fFc32EA6Bd29f0cB1C972442bd33ED316",
+ "recorded": "2026-10-08T17:01:45.256Z",
+ "rows": [
+  {
+   "case": "allowed",
+   "expect": "paid",
+   "amountUsd": 1,
+   "seller": "0xFB331d9DB7f6F25DCBcCF9a2Bd86986198F07bA5",
+   "agent": "0x1a593a5BE0922133Dd035636E381D2Ae47B279dB",
+   "hash": "0x0a83fad1d979e858f413e56d616987cf6547826c116dea45c2dbc0f5947811ef",
+   "status": "success",
+   "block": "111664108"
+  },
+  {
+   "case": "over-cap",
+   "expect": "OverCap",
+   "amountUsd": 5,
+   "seller": "0xFB331d9DB7f6F25DCBcCF9a2Bd86986198F07bA5",
+   "agent": "0x1a593a5BE0922133Dd035636E381D2Ae47B279dB",
+   "hash": "0xea9896018b9028602c54f78d58dd4eb249aa82efedf5e6cd05d691db5b8a3736",
+   "status": "reverted",
+   "block": "111664111"
+  },
+  {
+   "case": "wrong-seller",
+   "expect": "SellerNotAllowed",
+   "amountUsd": 1,
+   "seller": "0x000000000000000000000000000000000badF00D",
+   "agent": "0x1a593a5BE0922133Dd035636E381D2Ae47B279dB",
+   "hash": "0x4a6163cb3832a88db0f00c202953f9fe0f6c9ec0795fa89e194d7112649a70e2",
+   "status": "reverted",
+   "block": "111664113"
+  },
+  {
+   "case": "revoked",
+   "expect": "AgentRevoked",
+   "amountUsd": 1,
+   "seller": "0xFB331d9DB7f6F25DCBcCF9a2Bd86986198F07bA5",
+   "agent": "0x1a593a5BE0922133Dd035636E381D2Ae47B279dB",
+   "hash": "0xbd4676240ad4052b9893b6e36b9bfedf1e0c5927659110bba5c125f5616de2ec",
+   "status": "reverted",
+   "block": "111664119"
+  },
+  {
+   "case": "expired",
+   "expect": "LeashExpired",
+   "amountUsd": 1,
+   "seller": "0xFB331d9DB7f6F25DCBcCF9a2Bd86986198F07bA5",
+   "agent": "0x8A7FaA6F307DF3835d5dB09C589f7E10e0BDDC04",
+   "hash": "0x833b033ee6ef089b0427637a565b221cc9da7dc8fe21ff2c2d8b7748ce638b12",
+   "status": "reverted",
+   "block": "111664344"
+  }
+ ]
+}

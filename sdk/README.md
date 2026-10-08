@@ -81,6 +81,17 @@ nothing leaves the account.
 3. Use the key with `fetchWithLeash` / `payWithLeash`, or give it to an MCP client through
    [`leash-monad-mcp`](https://www.npmjs.com/package/leash-monad-mcp).
 
+## Verify Leash yourself
+
+```
+npx leash-monad verify
+```
+
+Checks Leash's claims against Monad mainnet in about ten seconds. It needs no keys and only reads. It covers the
+deployed and source-verified contracts, one allowed payment, and four refused payments with their on-chain revert
+reasons (over cap, wrong seller, revoked, expired). It also checks the P256 precompile, the agents' ERC-8004
+identities, the live paid API and the Envio indexer.
+
 ## Networks
 
 | | Chain | LeashHub |

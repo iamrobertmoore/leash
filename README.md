@@ -2,8 +2,8 @@
 
 <h1 align="center">Leash</h1>
 <p align="center"><b>Spend limits for AI agents, set with your passkey and enforced on Monad.</b></p>
-<p align="center"><a href="https://github.com/iamrobertmoore/leash/actions/workflows/test.yml"><img src="https://github.com/iamrobertmoore/leash/actions/workflows/test.yml/badge.svg" alt="tests"></a> <a href="https://www.npmjs.com/package/leash-monad"><img src="https://img.shields.io/npm/v/leash-monad?label=leash-monad" alt="npm leash-monad"></a> <a href="https://www.npmjs.com/package/leash-monad-mcp"><img src="https://img.shields.io/npm/v/leash-monad-mcp?label=leash-monad-mcp" alt="npm leash-monad-mcp"></a></p>
-<p align="center"><a href="https://leash-monad.vercel.app">Live site (Monad mainnet)</a> · <a href="sdk/README.md">SDK: <code>leash-monad</code></a> · <a href="mcp/README.md">MCP server</a> · <a href="#verify-it-in-five-minutes">Verify it</a> · <a href="docs/SECURITY.md">Threats &amp; gas</a> · <a href="#how-monad-is-used">How Monad is used</a></p>
+<p align="center"><a href="https://github.com/iamrobertmoore/leash/actions/workflows/test.yml"><img src="https://github.com/iamrobertmoore/leash/actions/workflows/test.yml/badge.svg" alt="tests"></a> <img src="https://img.shields.io/badge/contract%20tests-42-8B90FF" alt="42 contract tests"> <img src="https://img.shields.io/badge/mutants%20caught-23%2F23-22C55E" alt="23 of 23 mutants caught"> <a href="https://www.npmjs.com/package/leash-monad"><img src="https://img.shields.io/npm/v/leash-monad?label=leash-monad" alt="npm leash-monad"></a> <a href="https://www.npmjs.com/package/leash-monad-mcp"><img src="https://img.shields.io/npm/v/leash-monad-mcp?label=leash-monad-mcp" alt="npm leash-monad-mcp"></a></p>
+<p align="center"><a href="https://leash-monad.vercel.app">Live site (Monad mainnet)</a> · <a href="sdk/README.md">SDK: <code>leash-monad</code></a> · <a href="mcp/README.md">MCP server</a> · <a href="#proof-on-mainnet">Mainnet proof</a> · <a href="#verify-it-in-five-minutes">Verify it</a> · <a href="JUDGES.md">For judges</a> · <a href="docs/SECURITY.md">Threats &amp; gas</a> · <a href="#how-monad-is-used">How Monad is used</a></p>
 
 ---
 
@@ -25,18 +25,36 @@ what it can still spend today, and whether this payment will go through. No API 
 | `npm i leash-monad viem` then `checkAgent(agent, me, "2.00")` | `OK`, `OVER_CAP`, `REVOKED`, `EXPIRED` or `UNKNOWN_AGENT`, straight from the chain |
 | [Leash your own agent](https://leash-monad.vercel.app/own.html) with `npx leash-monad-mcp --new-key` | Any MCP agent (Claude Desktop, Cursor, …) gets `pay` and `fetch_paid` tools that can't spend past the daily cap your passkey set. Tested on mainnet: three paid API calls, the fourth refused |
 
+## Proof on mainnet
+
+Two agent keys, one passkey-owned account, real transactions on Monad mainnet. Every refusal is the contract reverting
+inside `LeashAccount.pay`, with its own error, not a server saying no. Recorded with [`scripts/proofs.ts`](scripts/proofs.ts)
+through the public site, exactly as a judge would.
+
+| The agent tries to pay | Monad says | Transaction |
+|---|---|---|
+| $1 to the paid API it may pay | **Paid** | [`0x0a83…11ef`](https://monadvision.com/tx/0x0a83fad1d979e858f413e56d616987cf6547826c116dea45c2dbc0f5947811ef) |
+| $5 against a $3 daily cap | Refused: `OverCap` | [`0xea98…3736`](https://monadvision.com/tx/0xea9896018b9028602c54f78d58dd4eb249aa82efedf5e6cd05d691db5b8a3736) |
+| $1 to a seller not on its list | Refused: `SellerNotAllowed` | [`0x4a61…70e2`](https://monadvision.com/tx/0x4a6163cb3832a88db0f00c202953f9fe0f6c9ec0795fa89e194d7112649a70e2) |
+| $1 after one-tap revoke | Refused: `AgentRevoked` | [`0xbd46…e2ec`](https://monadvision.com/tx/0xbd4676240ad4052b9893b6e36b9bfedf1e0c5927659110bba5c125f5616de2ec) |
+| $1 a minute after its leash ran out | Refused: `LeashExpired` | [`0x833b…8b12`](https://monadvision.com/tx/0x833b033ee6ef089b0427637a565b221cc9da7dc8fe21ff2c2d8b7748ce638b12) |
+
+`npx leash-monad verify` re-reads each of these from the chain, replays it to recover the revert reason, and checks
+the rest of this README too. Reads only, no keys, about ten seconds.
+
 ## Verify it in five minutes
 
-Or in ten seconds: `npm i && npm run verify` checks each row below against Monad mainnet, live, with no keys ([`scripts/verify.ts`](scripts/verify.ts)).
+Or in ten seconds: `npx leash-monad verify` (or `npm i && npm run verify` in this repo) checks each row below against Monad mainnet, live, with no keys ([`sdk/src/verify.ts`](sdk/src/verify.ts)).
 
 | Claim | How to check |
 |---|---|
 | It's live on Monad mainnet | `LeashHub` [`0x64a4…12c3`](https://monadvision.com/address/0x64a489074dd6a4b3b977e5f635a178366a8c12c3) on chain 143 |
-| A payment over the cap is refused on-chain | A refused `pay` from a real run: [`0xb01a…262d`](https://monadvision.com/tx/0xb01a00fd15251076160cca7f44a38e5b024955357df7159c44c3124c6634262d) shows "execution reverted" |
+| Every rule is enforced on-chain | The [proof table](#proof-on-mainnet) above: one paid, four refused, each with the contract's own revert reason |
 | The passkey is checked by Monad's P256 precompile | `LeashAccount.ownerExecute` → Solady `WebAuthn.verify` → `staticcall` to `0x0100`. Measured 7,282 gas per verification vs 355,149 for a Solidity verifier on the same chain |
 | Every agent is a real ERC-8004 identity | Agents are registered in Monad's Identity Registry `0x8004A169…a432`; the first on this hub is #10299 |
 | The deployed code is this code | `LeashHub`, the `LeashAccount` implementation and `tUSD` are source-verified (full match) on MonadVision: [hub](https://monadvision.com/contracts/full_match/143/0x64a489074dd6a4b3b977e5f635a178366a8c12c3/), [account](https://monadvision.com/contracts/full_match/143/0xe39E32C8c834B06d8Ca9f5f2120BC042242D053a/), [tUSD](https://monadvision.com/contracts/full_match/143/0x4adf40e6e5113339635e6dc54ff638e7b63bbea3/) |
-| The contracts do what this README says | `npm i && npx hardhat test` runs 22 tests with the P256 precompile switched on locally, including 1,500 random steps (payments, day changes, cap and allow-list changes) where the seller check must predict every payment's outcome, and every way a stolen agent key might try to get money out ([`test/properties.test.ts`](test/properties.test.ts)) |
+| The contracts do what this README says | `npm i && npx hardhat test` runs 42 tests with the P256 precompile switched on locally: every rule at its exact edge (the cap to the micro-dollar, the expiry second, UTC midnight), every misuse of an owner signature (another op, another account, a stale nonce, no user verification), every way a stolen agent key might try to get money out, and 1,500 random steps where the seller check must predict every payment's outcome ([`test/`](test/)) |
+| The tests would catch a broken rule | `npx tsx scripts/mutate.ts` breaks each of 23 safety rules in the contracts, one at a time, and runs the suite: all 23 are caught ([`docs/MUTATION.md`](docs/MUTATION.md)) |
 
 ## How Monad is used
 
