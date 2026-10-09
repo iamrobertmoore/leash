@@ -19,6 +19,8 @@ the agent pays can tell. Every row below points at the code that enforces it and
 | Someone else presents the agent's payment | The request must carry the agent's signature over `leash:<resource>:<nonce>`, and the payment's `ref` must match that nonce | `leashGate` | `mcp/test/e2e.ts` |
 | A refused payment is still charged | Refusals revert, so nothing moves. Monad charges gas on the gas *limit*, so the SDK sets a tight one (150k for `pay`). A refused payment cost 0.012 MON on mainnet | `payWithLeash` | mainnet tx in README |
 
+| Someone writes fake reviews to make an agent look good (or bad) | Anyone can review in ERC-8004, so `agentReputation` reports how many distinct sellers reviewed and takes a `reviewers` list to count only sellers you trust. The registry refuses reviews from the agent's own owner | ERC-8004 Reputation Registry; `agentReputation` | `mcp/test/e2e.ts` reputation counts |
+| Someone replays a refused agent's headers to make a seller spend gas on reviews | Refusal reviews are opt-in (`reviewRefusals`) and the demo seller writes at most one per agent, reason and day | `leashGate`, `server/seller.ts` | – |
 | Someone tries to claim an agent key already leashed to another account | The hub links each agent key to one account; a second claim reverts `AgentTaken` | `LeashHub.link` | `rules.test.ts` "one agent key belongs to one account" |
 | Someone initialises the bare implementation contract | Accounts are clones with their own storage; the implementation holds nothing and owns nothing | `LeashHub`, `initialize` | `rules.test.ts` "accounts cannot be re-initialised" |
 

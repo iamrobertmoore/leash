@@ -1,6 +1,7 @@
 // GET ?agent= -> an agent's track record from the Envio indexer: what it has paid, to how many sellers, since when,
 // and how its owner's other agents have fared. The on-chain check says what the agent may do now; this says what it has done.
 import { getAddress } from "viem";
+import { agentReputation } from "../sdk/src/index";
 
 const Q = `query ($a: String!) {
   Agent_by_pk(id: $a) { erc8004Id paymentCount totalPaid revoked leashedAt hasBrief
@@ -20,11 +21,13 @@ export default async function handler(req: any, res: any) {
     const g = j.data.Agent_by_pk;
     res.setHeader("cache-control", "public, s-maxage=5, stale-while-revalidate=30");
     if (!g) return res.status(200).end(JSON.stringify({ agent: a, known: false }));
+    // What sellers said about it, from Monad's ERC-8004 Reputation Registry (reviews tagged "leash").
+    const reputation = await agentReputation(g.erc8004Id, { network: process.env.LEASH_NETWORK === "testnet" ? "testnet" : "mainnet" }).catch(() => null);
     res.status(200).end(JSON.stringify({
       agent: a, known: true, erc8004Id: g.erc8004Id, leashedAt: g.leashedAt, revoked: g.revoked, hasBrief: g.hasBrief,
       payments: g.paymentCount, paidUsd: Number(g.totalPaid) / 1e6, sellersPaid: j.data.Payment.length,
       owner: { account: g.account.id, agents: g.account.agentCount, revoked: g.account.agents.filter((x: any) => x.revoked).length },
-      source: "Envio HyperIndex",
+      reputation, source: "Envio HyperIndex + ERC-8004 Reputation Registry",
     }));
   } catch (e: any) {
     res.status(502).end(JSON.stringify({ error: e?.message ?? String(e) }));

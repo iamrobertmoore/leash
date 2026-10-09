@@ -63,3 +63,4 @@ footer{position:relative;z-index:1;display:flex;justify-content:space-between;pa
 .pr b{font:500 12px 'Geist Mono';letter-spacing:.04em;color:var(--refuse)}.pr.ok b{color:var(--pass)}
 .pr i{font:400 12px 'Geist Mono';font-style:normal;color:var(--muted)}
 @media (max-width:640px){.pr{grid-template-columns:1fr auto}.pr i{grid-column:1/-1}}
+.prh{font:500 11px 'Geist Mono';letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:14px 18px 8px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}

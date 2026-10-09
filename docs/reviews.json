@@ -1,0 +1,12 @@
+{
+ "agentId": "10327",
+ "agent": "0x66F81BE509CF94E43Fcf192d552C722E32ccaD65",
+ "paid": {
+  "payment": "0x664e6a42b6c0f444498b32c6aed5603e433e7a0e77a9112b4d59db8069e46644",
+  "review": "0x9a7745237df478e54c3c4e55f044a6dd41470e52155c3eb48a01d945b5908b6f"
+ },
+ "refused": {
+  "status": "OVER_CAP",
+  "review": "0xfb014ee877d0363441de4267262feb57b6c743ff8d63b8fadd14274c26243ab1"
+ }
+}

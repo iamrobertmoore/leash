@@ -1,7 +1,8 @@
 // `npx leash-monad verify`: checks Leash's public claims against Monad mainnet, live. Reads only; no keys, no funds.
 import crypto from "node:crypto";
-import { createPublicClient, http, parseAbi, toHex, concat, keccak256, decodeFunctionData, decodeErrorResult, type Address, type Hex } from "viem";
+import { createPublicClient, http, parseAbi, toHex, concat, keccak256, decodeFunctionData, decodeErrorResult, decodeEventLog, type Address, type Hex } from "viem";
 import proofs from "../../docs/proofs.json";
+import reviews from "../../docs/reviews.json";
 
 const RPC = process.env.LEASH_RPC ?? "https://rpc.monad.xyz";
 const SITE = "https://leash-monad.vercel.app";
@@ -13,6 +14,8 @@ const IDENTITY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432" as Address;
 const P256 = "0x0000000000000000000000000000000000000100" as Address;
 const DEMO_ACCOUNT = "0xdE69C70Ed03Cf585800044030275c00d9E74538C" as Address;
 const DEMO_AGENT_ID = 10299n;
+const REPUTATION = "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63" as Address;
+const SELLER = "0xFB331d9DB7f6F25DCBcCF9a2Bd86986198F07bA5" as Address; // the live paid API's payTo
 
 const errors = parseAbi([
   "error UnknownAgent()", "error AgentRevoked()", "error LeashExpired(uint64 expiry)",
@@ -58,6 +61,18 @@ export async function verify(log: (s: string) => void = console.log): Promise<nu
         try { reason = decodeErrorResult({ abi: errors, data }).errorName; } catch { /* keep unknown */ }
       }
       ok(`${p.case.padEnd(13)} refused: ${reason}`, isPay && rc.status === "reverted" && reason === p.expect, EXPLORER + hash);
+    });
+  }
+
+  log("\nSellers review agents in ERC-8004 (Monad's Reputation Registry)");
+  const feedbackAbi = parseAbi(["event NewFeedback(uint256 indexed agentId, address indexed clientAddress, uint64 feedbackIndex, int128 value, uint8 valueDecimals, string indexed indexedTag1, string tag1, string tag2, string endpoint, string feedbackURI, bytes32 feedbackHash)"]);
+  for (const [label, r, tag2] of [["after serving it", reviews.paid.review, "paid"], ["after refusing it", reviews.refused.review, String(reviews.refused.status).toLowerCase()]] as const) {
+    await step(label, async () => {
+      const rc = await pub.getTransactionReceipt({ hash: r as Hex });
+      const ev = rc.logs.filter((l) => l.address.toLowerCase() === REPUTATION.toLowerCase()).map((l) => { try { return decodeEventLog({ abi: feedbackAbi, data: l.data, topics: l.topics }); } catch { return null; } }).find(Boolean) as any;
+      const a = ev?.args;
+      ok(`The paid API reviewed agent #${reviews.agentId} ${label}: ${a?.tag1}/${a?.tag2}`, rc.status === "success" && a?.agentId === BigInt(reviews.agentId)
+        && a?.clientAddress.toLowerCase() === SELLER.toLowerCase() && a?.tag1 === "leash" && a?.tag2 === tag2, EXPLORER + r);
     });
   }
 

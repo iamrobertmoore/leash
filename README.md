@@ -39,8 +39,16 @@ through the public site, exactly as a judge would.
 | $1 after one-tap revoke | Refused: `AgentRevoked` | [`0xbd46…e2ec`](https://monadvision.com/tx/0xbd4676240ad4052b9893b6e36b9bfedf1e0c5927659110bba5c125f5616de2ec) |
 | $1 a minute after its leash ran out | Refused: `LeashExpired` | [`0x833b…8b12`](https://monadvision.com/tx/0x833b033ee6ef089b0427637a565b221cc9da7dc8fe21ff2c2d8b7748ce638b12) |
 
-`npx leash-monad verify` re-reads each of these from the chain, replays it to recover the revert reason, and checks
-the rest of this README too. Reads only, no keys, about ten seconds.
+And the seller writes what happened into the agent's public record. The live paid API reviews every agent it serves,
+and every agent its leash refuses, in Monad's ERC-8004 Reputation Registry (tag `leash`), signed with the seller's key:
+
+| What happened | Review in ERC-8004 | Transaction |
+|---|---|---|
+| Agent #10327 paid $1 inside its leash and was served | `leash` / `paid` | [`0x9a77…8b6f`](https://monadvision.com/tx/0x9a7745237df478e54c3c4e55f044a6dd41470e52155c3eb48a01d945b5908b6f) |
+| After the hijack, the same agent asked again and the leash said no | `leash` / `over_cap` | [`0xfb01…3ab1`](https://monadvision.com/tx/0xfb014ee877d0363441de4267262feb57b6c743ff8d63b8fadd14274c26243ab1) |
+
+`npx leash-monad verify` re-reads all of these from the chain, replays each refused payment to recover the revert
+reason, and checks the rest of this README too. Reads only, no keys, about ten seconds.
 
 ## Verify it in five minutes
 
@@ -64,9 +72,10 @@ Remove any one of these and either the mechanism disappears or a real attack ope
 |---|---|---|---|
 | 1 | **P256 precompile at `0x0100`** | The owner is a WebAuthn passkey, not a seed phrase. Every leash change and every revoke is a P-256 signature checked on-chain. At 7,282 gas it's cheap enough to do on every owner action | [`LeashAccount.sol#L111`](contracts/LeashAccount.sol#L111), Solady `P256.sol#L61` |
 | 2 | **ERC-8004 Identity Registry** | Each agent is registered when it's leashed, owned by the passkey account, with the account and agent key in its metadata. "Whose agent is this" has a public answer | [`LeashAccount.sol#L140`](contracts/LeashAccount.sol#L140) |
-| 3 | **Per-call on-chain enforcement** | The check runs inside the payment itself, so a hijacked agent can't skip it. A refused call costs under a cent at Monad's fees | [`LeashAccount.sol#L195`](contracts/LeashAccount.sol#L195) |
-| 4 | **One-read seller check** | `LeashHub.check` answers status, remaining budget, expiry and ERC-8004 id in one `eth_call` | [`LeashHub.sol#L55`](contracts/LeashHub.sol#L55), [`sdk/src/index.ts#L50`](sdk/src/index.ts#L50) |
-| 5 | **400 ms blocks** | The live site draws one cell per real Monad block and drops each payment into the block that included it. A 20-attempt attack plays out in about 15 blocks | [`app/src/tether.ts`](app/src/tether.ts) |
+| 3 | **ERC-8004 Reputation Registry** | Sellers review each agent they serve or refuse (`leash`/`paid`, `leash`/`over_cap`, …), signed with their own key, so an agent's track record is portable and public | [`sdk/src/index.ts`](sdk/src/index.ts) `reviewAgent`, `agentReputation` |
+| 4 | **Per-call on-chain enforcement** | The check runs inside the payment itself, so a hijacked agent can't skip it. A refused call costs under a cent at Monad's fees | [`LeashAccount.sol#L195`](contracts/LeashAccount.sol#L195) |
+| 5 | **One-read seller check** | `LeashHub.check` answers status, remaining budget, expiry and ERC-8004 id in one `eth_call` | [`LeashHub.sol#L55`](contracts/LeashHub.sol#L55), [`sdk/src/index.ts#L50`](sdk/src/index.ts#L50) |
+| 6 | **400 ms blocks** | The live site draws one cell per real Monad block and drops each payment into the block that included it. A 20-attempt attack plays out in about 15 blocks | [`app/src/tether.ts`](app/src/tether.ts) |
 
 **Indexed by Envio.** An [Envio HyperIndex](indexer/) indexer follows the hub on Monad mainnet: every account (clones, registered dynamically from `AccountCreated`), leash, payment, revoke and sealed brief. The site's "Live on Monad" totals and seller leaderboard read it through a cached [`/api/network`](api/network.ts), and [`/api/agent?agent=0x…`](api/agent.ts) gives a seller the agent's track record (payments, dollars, distinct sellers, revoked or not) next to the live on-chain check. Public GraphQL: [`indexer.dev.hyperindex.xyz/effeb1d/v1/graphql`](https://indexer.dev.hyperindex.xyz/effeb1d/v1/graphql).
 
@@ -89,6 +98,9 @@ Remove any one of these and either the mechanism disappears or a real attack ope
   payment would go through, with no API key and no Leash server in the path. It's wrapped as a 402 gate on npm.
 - **The owner is a passkey that Monad itself verifies**, through the `0x0100` precompile, and every agent is in the
   canonical ERC-8004 registry on mainnet.
+- **Every sale leaves a public review.** A seller using `leashGate({ review: sellerKey })` writes "paid" or the refusal
+  reason to the agent's ERC-8004 reputation, so an agent's history across sellers is on Monad, not in anyone's database,
+  and `agentReputation(id)` reads it back.
 
 ## Limits
 

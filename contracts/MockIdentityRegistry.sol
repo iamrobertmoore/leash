@@ -31,6 +31,11 @@ contract MockIdentityRegistry is ERC721 {
         metadata[id][key] = value;
     }
 
+    /// Same check the real registry exposes to its Reputation Registry (no self-reviews).
+    function isAuthorizedOrOwner(address spender, uint256 id) external view returns (bool) {
+        return _isAuthorized(ownerOf(id), spender, id);
+    }
+
     function getMetadata(uint256 id, string calldata key) external view returns (bytes memory) {
         return metadata[id][key];
     }

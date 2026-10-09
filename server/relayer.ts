@@ -91,6 +91,12 @@ async function fund(to: Address, target: bigint) {
   }
 }
 
+/** Keep a server-side key (the demo seller, which signs its ERC-8004 reviews) topped up with gas. */
+export async function ensureGas(to: Address, mon: string) {
+  const want = parseEther(mon);
+  if ((await pub.getBalance({ address: to })) < want / 3n) await fund(to, want);
+}
+
 /** "Leash your own agent": once the owner's passkey has leashed an agent to this account, give that agent a little MON
  *  for gas so it can pay without the owner touching a wallet. Only ever for an agent the hub links to this account. */
 export async function fundOwnAgent(account: Address, agent: Address) {

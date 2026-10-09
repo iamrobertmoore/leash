@@ -105,6 +105,7 @@ $("bBuy").onclick = () => busy($("bBuy") as HTMLButtonElement, $("oBuy"), async 
   stats();
   $("oBuy").innerHTML = `402 Payment Required · leash ${r.first.leash.status}, $${Number(r.first.leash.remainingToday).toFixed(2)} left<br>`
     + `Paid $${r.body.paid} inside the leash · ${tx(r.tx)}<br>200 OK · Monad block ${Number(r.body.forecast.block).toLocaleString()}, gas ${r.body.forecast.gasPriceGwei} gwei`
+    + (r.review ? `<br>The seller reviewed your agent in ERC-8004 (paid) · ${tx(r.review)}` : "")
     + `<br>Bought ${bought} · <button class="link" id="again1">buy another</button>`;
   $("again1").onclick = () => $("bBuy").click();
   ($("bBuy") as HTMLButtonElement).disabled = false; $("bBuy").textContent = "Buy a forecast";
@@ -125,7 +126,7 @@ $("b3").onclick = () => busy($("b3") as HTMLButtonElement, $("o3"), async () => 
   $("o3").innerHTML += `<br>Seller check now: <b>${STATUS[c.status]}</b> · $${c.remaining.toFixed(2)} left · ERC-8004 #${c.agentId}`;
   history($("o3"), setup!.agent);
   const again = await buyForecast(setup!).catch((e) => ({ status: 0, error: e.message }));
-  if (again.stage === "refused-before-pay") $("o3").innerHTML += `<br>Paid API now: <b class="red">${again.status}</b> · ${again.body.leash.reason} Refused before doing any work.`;
+  if (again.stage === "refused-before-pay") $("o3").innerHTML += `<br>Paid API now: <b class="red">${again.status}</b> · ${again.body.leash.reason} Refused before doing any work.${again.body.review ? ` Reviewed in ERC-8004 · ${tx(again.body.review)}` : ""}`;
   ($("b4") as HTMLButtonElement).disabled = false; stepOn(5);
 });
 
@@ -145,7 +146,9 @@ function history(el: HTMLElement, agent: string) {
   setTimeout(async () => {
     const h = await agentHistory(agent as any); if (!h?.known) return;
     const span = document.createElement("span");
-    span.innerHTML = `<br>Track record (Envio): ${h.payments} payments · $${h.paidUsd.toFixed(2)} to ${h.sellersPaid} seller${h.sellersPaid === 1 ? "" : "s"}${h.revoked ? ' · <b class="red">revoked</b>' : ""}`;
+    const rep = h.reputation;
+    span.innerHTML = `<br>Track record (Envio): ${h.payments} payments · $${h.paidUsd.toFixed(2)} to ${h.sellersPaid} seller${h.sellersPaid === 1 ? "" : "s"}${h.revoked ? ' · <b class="red">revoked</b>' : ""}`
+      + (rep?.reviews ? `<br>ERC-8004 reviews: ${rep.paid} paid, ${rep.refused} refused, from ${rep.reviewers} seller${rep.reviewers === 1 ? "" : "s"}` : "");
     el.insertBefore(span, el.querySelector("#again")?.previousSibling ?? null);
   }, 2500);
 }

@@ -8,7 +8,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { hardhat } from "viem/chains";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { leashGate, payWithLeash, proofMessage } from "../../sdk/src/index";
+import { leashGate, payWithLeash, proofMessage, agentReputation } from "../../sdk/src/index";
 import { toHex } from "viem";
 import { softPasskey } from "../../lib/webauthn";
 import fs from "node:fs";
@@ -18,6 +18,8 @@ const RPC = "http://127.0.0.1:8545";
 const DEPLOYER = privateKeyToAccount("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80");
 const AGENT_KEY = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d" as Hex;
 const SELLER = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" as Address;
+// the key the seller reviews agents with in ERC-8004 (hardhat account #3)
+const REVIEWER = privateKeyToAccount("0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6");
 const art = (n: string) => JSON.parse(fs.readFileSync(`artifacts/contracts/${n}.sol/${n}.json`, "utf8"));
 const usd = (n: number) => parseUnits(String(n), 6);
 
@@ -32,6 +34,7 @@ const send = async (address: Address, abi: any, functionName: string, args: unkn
 
 const identity = await deploy("MockIdentityRegistry");
 const hub = await deploy("LeashHub", [identity.address]);
+const reputation = await deploy("MockReputationRegistry", [identity.address]);
 const tusd = await deploy("TestUSD");
 const pk = softPasskey();
 await send(hub.address, hub.abi, "createAccount", [pk.x, pk.y]);
@@ -47,11 +50,11 @@ await send(account, acctAbi, "ownerExecute", [op, pk.sign(digest)]);
 console.log("leashed", agent.address, "at $4/day on account", account);
 
 // a real paid API behind the SDK's gate
-const network = { name: "local", chainId: 31337, rpc: RPC, explorer: "http://local", hub: hub.address, identityRegistry: identity.address };
+const network = { name: "local", chainId: 31337, rpc: RPC, explorer: "http://local", hub: hub.address, identityRegistry: identity.address, reputationRegistry: reputation.address };
 const used = new Set<string>();
 const claim = (tx: string) => (used.has(tx) ? false : (used.add(tx), true));
 const api = http.createServer(async (req, res) => {
-  const g = await leashGate({ method: req.method!, url: req.url!, headers: req.headers }, { seller: SELLER, priceUsd: "1", network, claim, acceptTokens: [tusd.address] });
+  const g = await leashGate({ method: req.method!, url: req.url!, headers: req.headers }, { seller: SELLER, priceUsd: "1", network, claim, acceptTokens: [tusd.address], review: REVIEWER, reviewRefusals: () => true });
   res.setHeader("content-type", "application/json");
   if (!g.allow) { res.statusCode = g.status; return res.end(JSON.stringify(g.body)); }
   res.end(JSON.stringify({ forecast: "sunny", paid: g.paid }));
@@ -134,7 +137,14 @@ assert.ok(r.error); assert.match(r.text, /OVER_CAP/);
 r = await call("check_agent", { agent: agent.address, seller: SELLER, amount_usd: "1" });
 assert.equal(r.json.status, "OVER_CAP"); assert.equal(r.json.remainingTodayUsd, "0");
 
+// every agent served or refused through the gate now has a review in ERC-8004, signed by the seller
+const agentId = (await pub.readContract({ address: account, abi: acctAbi, functionName: "leashes", args: [agent.address] }) as any)[5];
+await new Promise((res) => setTimeout(res, 500));
+const rep = await agentReputation(agentId, { network });
+console.log("\nERC-8004 reputation:", rep);
+assert.deepEqual(rep, { reviews: 4, reviewers: 1, paid: 3, refused: 1 });
+
 const paid = await pub.readContract({ address: tusd.address, abi: tusd.abi, functionName: "balanceOf", args: [SELLER] }) as bigint;
 assert.equal(paid, usd(4));
-console.log("\nALL MCP CHECKS PASSED: $4 paid in total (the cap); every overspend, the replayed payment and the wrong token refused.");
+console.log("\nALL MCP CHECKS PASSED: $4 paid in total (the cap); every overspend, the replayed payment and the wrong token refused; 3 paid + 1 refused reviews in ERC-8004.");
 await client.close(); api.close(); process.exit(0);

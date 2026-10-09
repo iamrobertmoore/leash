@@ -6,12 +6,12 @@
  */
 import {
   createPublicClient, createWalletClient, http, parseUnits, formatUnits, keccak256, toHex, decodeEventLog,
-  verifyMessage, type Address, type Hex, type PublicClient, type Account,
+  verifyMessage, zeroHash, type Address, type Hex, type PublicClient, type Account, type Chain,
 } from "viem";
 import { networks, type LeashNetwork } from "./networks";
-import { hubAbi, accountAbi } from "./abi";
+import { hubAbi, accountAbi, reputationAbi } from "./abi";
 
-export { networks, hubAbi, accountAbi };
+export { networks, hubAbi, accountAbi, reputationAbi };
 export type { LeashNetwork };
 
 export const STATUS = ["OK", "UNKNOWN_AGENT", "REVOKED", "EXPIRED", "SELLER_NOT_ALLOWED", "OVER_CAP"] as const;
@@ -20,6 +20,7 @@ export type LeashStatus = (typeof STATUS)[number];
 export type Options = { network?: LeashNetwork | keyof typeof networks; client?: PublicClient; decimals?: number };
 const net = (o: Options = {}): LeashNetwork => (typeof o.network === "string" ? networks[o.network] : o.network) ?? networks.mainnet;
 const clientFor = (o: Options = {}) => o.client ?? (createPublicClient({ transport: http(net(o).rpc) }) as PublicClient);
+const chainOf = (n: LeashNetwork): Chain => ({ id: n.chainId, name: n.name, nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 }, rpcUrls: { default: { http: [n.rpc] } } });
 
 export type Verdict = {
   /** OK means this payment would go through right now. */
@@ -70,7 +71,7 @@ export const proofMessage = (resource: string, nonce: string) => `leash:${resour
 
 export type GateRequest = { method: string; url: string; headers: Record<string, string | string[] | undefined> };
 export type GateResult =
-  | { allow: true; agent: Address; paid: string; tx: Hex; verdict: Verdict }
+  | { allow: true; agent: Address; paid: string; tx: Hex; verdict: Verdict; review?: Hex }
   | { allow: false; status: 402 | 403; body: Record<string, unknown> };
 
 /**
@@ -90,6 +91,12 @@ export type GateConfig = {
   /** Tokens you accept as payment. Default: the network's USDC and the Leash test dollar. A leash can name any
    *  ERC-20, so without this check an agent could "pay" in a token worth nothing. */
   acceptTokens?: Address[];
+  /** The seller's key. When set, the gate leaves an ERC-8004 review of each agent it serves ("paid"), so an agent's
+   *  track record lives in Monad's Reputation Registry, signed by the sellers who dealt with it. */
+  review?: Account;
+  /** Also review agents the leash refused (tag2 = the refusal, e.g. "over_cap"). Return true to review this one;
+   *  use it to rate-limit, since anyone can send a refused agent's headers. Default: never. */
+  reviewRefusals?: (agent: Address, status: LeashStatus) => boolean;
 } & Options;
 
 export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<GateResult> {
@@ -107,7 +114,11 @@ export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<Gate
   const payment = h("x-leash-payment") as Hex | undefined;
   if (!payment) {
     const verdict = await checkAgent(agent, cfg.seller, cfg.priceUsd, cfg);
-    return { allow: false, status: verdict.ok ? 402 : 403, body: { error: verdict.ok ? "payment_required" : "leash_refused", price: cfg.priceUsd, payTo: cfg.seller, ref, leash: verdict } };
+    let review: Hex | undefined;
+    if (!verdict.ok && cfg.review && verdict.erc8004Id !== "0" && cfg.reviewRefusals?.(agent, verdict.status)) {
+      review = await reviewAgent(cfg.review, { agentId: verdict.erc8004Id, outcome: "refused", status: verdict.status, endpoint: resource }, cfg).catch(() => undefined);
+    }
+    return { allow: false, status: verdict.ok ? 402 : 403, body: { error: verdict.ok ? "payment_required" : "leash_refused", price: cfg.priceUsd, payTo: cfg.seller, ref, leash: verdict, ...(review ? { review } : {}) } };
   }
   const client = clientFor(cfg);
   const rc = await client.getTransactionReceipt({ hash: payment }).catch(() => null);
@@ -133,11 +144,68 @@ export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<Gate
           return { allow: false, status: 402, body: { error: "payment_used", ref, reason: "That payment was already used. Pay for this request." } };
         }
         const verdict = await checkAgent(agent, cfg.seller, "0", cfg);
-        return { allow: true, agent, paid: formatUnits(a.amount, d), tx: payment, verdict };
+        const paid = formatUnits(a.amount, d);
+        const review = cfg.review && verdict.erc8004Id !== "0"
+          ? await reviewAgent(cfg.review, { agentId: verdict.erc8004Id, outcome: "paid", endpoint: resource, payment }, cfg).catch(() => undefined)
+          : undefined;
+        return { allow: true, agent, paid, tx: payment, verdict, ...(review ? { review } : {}) };
       }
     } catch { /* not our event */ }
   }
   return { allow: false, status: 402, body: { error: "payment_mismatch", ref } };
+}
+
+// ---------------------------------------------------------------- ERC-8004 reputation
+
+/** tag1 on every review Leash writes, so anyone can filter for them. */
+export const REVIEW_TAG = "leash";
+
+export type Review = {
+  agentId: string | bigint;
+  /** "paid": served after a payment inside the leash (value 1). "refused": the leash said no (value 0). */
+  outcome: "paid" | "refused";
+  /** For refusals: why (becomes tag2, e.g. "over_cap"). */
+  status?: LeashStatus;
+  /** The resource the agent asked for. */
+  endpoint?: string;
+  /** The payment transaction, linked from the review and stored as its hash. */
+  payment?: Hex;
+};
+
+/** Leave an ERC-8004 review of an agent, as the seller, in Monad's Reputation Registry. Returns the transaction hash
+ *  once it is broadcast; it doesn't wait for inclusion, so it adds little to a response. */
+export async function reviewAgent(seller: Account, r: Review, o: Options = {}): Promise<Hex> {
+  const n = net(o);
+  if (!n.reputationRegistry) throw new Error("No ERC-8004 Reputation Registry on this network");
+  const w = createWalletClient({ account: seller, transport: http(n.rpc), chain: chainOf(n) });
+  const tag2 = r.outcome === "paid" ? "paid" : (r.status ?? "refused").toLowerCase();
+  return w.writeContract({
+    address: n.reputationRegistry, abi: reputationAbi, functionName: "giveFeedback",
+    args: [BigInt(r.agentId), r.outcome === "paid" ? 1n : 0n, 0, REVIEW_TAG, tag2, r.endpoint ?? "",
+      r.payment ? `${n.explorer}/tx/${r.payment}` : "", r.payment ?? zeroHash],
+  });
+}
+
+export type Reputation = {
+  /** Leash reviews on record for this agent (not revoked). */
+  reviews: number;
+  /** How many different sellers left them. */
+  reviewers: number;
+  paid: number;
+  refused: number;
+};
+
+/** An agent's Leash track record from ERC-8004: how many sellers reviewed it, how often it paid, how often its leash
+ *  said no. Pass `reviewers` to count only sellers you trust (anyone can write a review). */
+export async function agentReputation(agentId: string | bigint, o: Options & { reviewers?: Address[] } = {}): Promise<Reputation> {
+  const n = net(o), c = clientFor(o), id = BigInt(agentId);
+  const none = { reviews: 0, reviewers: 0, paid: 0, refused: 0 };
+  if (!n.reputationRegistry || id === 0n) return none;
+  const clients = o.reviewers ?? (await c.readContract({ address: n.reputationRegistry, abi: reputationAbi, functionName: "getClients", args: [id] }));
+  if (!clients.length) return none;
+  const r = await c.readContract({ address: n.reputationRegistry, abi: reputationAbi, functionName: "readAllFeedback", args: [id, [...clients], REVIEW_TAG, "", false] });
+  const paid = r[5].filter((t) => t === "paid").length;
+  return { reviews: r[5].length, reviewers: new Set(r[0].map((x) => x.toLowerCase())).size, paid, refused: r[5].length - paid };
 }
 
 // ---------------------------------------------------------------- agent side
@@ -147,7 +215,7 @@ export async function payWithLeash(agentAccount: Account, seller: Address, amoun
   const n = net(o), client = clientFor(o);
   const account = await client.readContract({ address: n.hub, abi: hubAbi, functionName: "accountOf", args: [agentAccount.address] });
   if (account === "0x0000000000000000000000000000000000000000") throw new Error("This agent has no leash");
-  const w = createWalletClient({ account: agentAccount, transport: http(n.rpc), chain: { id: n.chainId, name: n.name, nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 }, rpcUrls: { default: { http: [n.rpc] } } } });
+  const w = createWalletClient({ account: agentAccount, transport: http(n.rpc), chain: chainOf(n) });
   const hash = await w.writeContract({ address: account, abi: accountAbi, functionName: "pay", args: [seller, parseUnits(amountUsd, o.decimals ?? 6), ref], gas: o.gas ?? 150_000n });
   const rc = await client.waitForTransactionReceipt({ hash });
   if (rc.status !== "success") throw Object.assign(new Error("Refused on-chain by the leash"), { hash });

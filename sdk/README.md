@@ -57,6 +57,20 @@ returns `false` if you've seen it before (a unique row in your database is enoug
 const g = await leashGate(req, { seller: MY_ADDRESS, priceUsd: "1", claim: (tx) => db.insertIfNew("payments", tx) });
 ```
 
+**Leave a review in ERC-8004.** Pass your seller key as `review` and the gate writes each agent it serves to Monad's
+ERC-8004 Reputation Registry (`tag1 = "leash"`, `tag2 = "paid"`, linked to the payment). With `reviewRefusals` it also
+records refusals (`over_cap`, `revoked`, `expired`, …); return `true` only when you want one, because anyone can replay
+a refused agent's headers. Reviews are broadcast, not awaited, so they add little to the response.
+
+```ts
+const g = await leashGate(req, { seller: me.address, priceUsd: "1", review: me, reviewRefusals: oncePerAgentPerDay });
+
+// before serving an unfamiliar agent, read what other sellers said about it
+import { agentReputation } from "leash-monad";
+const rep = await agentReputation(verdict.erc8004Id);            // { reviews, reviewers, paid, refused }
+const trusted = await agentReputation(id, { reviewers: [a, b] });  // count only sellers you trust
+```
+
 Full examples, each runnable: [Express](../examples/express-seller.mjs), [Next.js route](../examples/next-route.ts),
 [check only](../examples/check-before-serving.mjs), [agent side](../examples/agent-pays.mjs).
 

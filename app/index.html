@@ -70,6 +70,7 @@
 <section class="band" id="proof">
  <div class="col"><div class="k ac">Proof on Monad mainnet</div><h2>Every rule, refused by the contract.</h2>
   <p>One allowed payment, then one attempt against each rule. Each refusal is a real transaction that reverted inside the account's <b>pay()</b>, with the contract's own reason. Not a server saying no.</p>
+  <p style="margin-top:12px">Each sale, and each agent the leash turns away, also lands in the agent's public ERC-8004 reputation, signed by the seller.</p>
   <p class="try">Check them all yourself: <code>npx leash-monad verify</code> re-reads each one from the chain. Reads only, about ten seconds.</p></div>
  <div class="proofs">
   <a class="pr ok" href="https://monadvision.com/tx/0x0a83fad1d979e858f413e56d616987cf6547826c116dea45c2dbc0f5947811ef" target="_blank" rel="noopener"><span>$1 to the API it may pay</span><b>PAID</b><i>0x0a83…11ef ↗</i></a>
@@ -77,6 +78,9 @@
   <a class="pr no" href="https://monadvision.com/tx/0x4a6163cb3832a88db0f00c202953f9fe0f6c9ec0795fa89e194d7112649a70e2" target="_blank" rel="noopener"><span>$1 to a seller not on its list</span><b>SellerNotAllowed</b><i>0x4a61…70e2 ↗</i></a>
   <a class="pr no" href="https://monadvision.com/tx/0xbd4676240ad4052b9893b6e36b9bfedf1e0c5927659110bba5c125f5616de2ec" target="_blank" rel="noopener"><span>$1 after one-tap revoke</span><b>AgentRevoked</b><i>0xbd46…e2ec ↗</i></a>
   <a class="pr no" href="https://monadvision.com/tx/0x833b033ee6ef089b0427637a565b221cc9da7dc8fe21ff2c2d8b7748ce638b12" target="_blank" rel="noopener"><span>$1 after its leash ran out</span><b>LeashExpired</b><i>0x833b…8b12 ↗</i></a>
+  <div class="prh">Then the seller reviews the agent in ERC-8004</div>
+  <a class="pr ok" href="https://monadvision.com/tx/0x9a7745237df478e54c3c4e55f044a6dd41470e52155c3eb48a01d945b5908b6f" target="_blank" rel="noopener"><span>Agent #10327 paid and was served</span><b>leash/paid</b><i>0x9a77…8b6f ↗</i></a>
+  <a class="pr" href="https://monadvision.com/tx/0xfb014ee877d0363441de4267262feb57b6c743ff8d63b8fadd14274c26243ab1" target="_blank" rel="noopener"><span>Same agent, after the hijack</span><b>leash/over_cap</b><i>0xfb01…3ab1 ↗</i></a>
  </div>
 </section>
 <section class="net" id="network" hidden>

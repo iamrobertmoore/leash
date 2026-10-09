@@ -5,6 +5,6 @@ export default async function handler(req: any, res: any) {
   try {
     const g = await gate({ method: req.method, url: req.url, headers: req.headers });
     if (!g.allow) return res.status(g.status).end(JSON.stringify(g.body));
-    return res.status(200).end(JSON.stringify({ paid: g.paid, tx: g.tx, leashAfter: g.verdict, forecast: await forecast() }));
+    return res.status(200).end(JSON.stringify({ paid: g.paid, tx: g.tx, review: g.review, leashAfter: g.verdict, forecast: await forecast() }));
   } catch (e: any) { return res.status(500).end(JSON.stringify({ error: e?.shortMessage ?? e?.message })); }
 }

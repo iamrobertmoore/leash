@@ -3,15 +3,15 @@ import { keccak256, encodePacked, toHex, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { leashGate, paymentRef, proofMessage, checkAgent, payWithLeash } from "../sdk/src/index";
 import { NET } from "./config";
-import { pub, demoKeys } from "./relayer";
+import { pub, demoKeys, ensureGas } from "./relayer";
 import { accountAbi } from "./abi";
 
 export const network = NET.chain.id === 143 ? "mainnet" : "testnet";
 export const PRICE = "1";
 export const RESOURCE = "/api/forecast";
+const sellerKey = () => privateKeyToAccount(keccak256(encodePacked(["string", "string"], [process.env.AGENT_SEED!, "demo-seller"])));
 export function sellerAddress(): Address {
-  const seed = process.env.AGENT_SEED!;
-  return privateKeyToAccount(keccak256(encodePacked(["string", "string"], [seed, "demo-seller"]))).address;
+  return sellerKey().address;
 }
 
 export async function forecast() {
@@ -23,8 +23,17 @@ export async function forecast() {
 // payment older than 5 minutes; a production seller passes a claim() backed by its database.
 const used = new Set<string>();
 const claim = (tx: string) => (used.has(tx) ? false : (used.add(tx), true));
+// The seller reviews every agent it serves in ERC-8004 ("paid"), and each refused agent once per day per instance
+// ("over_cap", "revoked", ...): anyone can replay a refused agent's headers, so refusals are rate-limited.
+const refusedToday = new Set<string>();
+const reviewRefusals = (agent: Address, status: string) => {
+  const k = `${agent.toLowerCase()}:${status}:${Math.floor(Date.now() / 86_400_000)}`;
+  return refusedToday.has(k) ? false : (refusedToday.add(k), true);
+};
 export async function gate(req: { method: string; url: string; headers: Record<string, any> }) {
-  return leashGate(req, { seller: sellerAddress(), priceUsd: PRICE, resource: RESOURCE, network, claim, maxPaymentAgeSeconds: 300 });
+  const seller = sellerKey();
+  await ensureGas(seller.address, "2").catch(() => undefined);
+  return leashGate(req, { seller: seller.address, priceUsd: PRICE, resource: RESOURCE, network, claim, maxPaymentAgeSeconds: 300, review: seller, reviewRefusals });
 }
 
 /** The judge's agent buys one forecast the honest way: 402, pay inside the leash, retry, 200. Every stage is returned. */
@@ -43,6 +52,7 @@ export async function buyOnce(account: Address, baseUrl: string) {
   try { tx = await payWithLeash(agent, firstBody.payTo, firstBody.price, firstBody.ref, { network }); }
   catch (e: any) { return { stage: "payment-refused", status: 402, body: firstBody, error: e.message, tx: e.hash }; }
   const second = await fetch(url, { headers: { ...headers, "x-leash-payment": tx } });
-  return { stage: "served", status: second.status, first: { status: first.status, leash: firstBody.leash }, tx, body: await second.json() };
+  const body = await second.json();
+  return { stage: "served", status: second.status, first: { status: first.status, leash: firstBody.leash }, tx, review: body.review, body };
 }
 export { paymentRef, checkAgent };
