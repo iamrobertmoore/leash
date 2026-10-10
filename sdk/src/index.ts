@@ -10,8 +10,11 @@ import {
 } from "viem";
 import { networks, type LeashNetwork } from "./networks";
 import { hubAbi, accountAbi, reputationAbi } from "./abi";
+import { checkSeller, type SellerPolicy } from "./policy";
 
 export { networks, hubAbi, accountAbi, reputationAbi };
+export { checkSeller, SCLERA, scleraAbi } from "./policy";
+export type { SellerPolicy, SellerVerdict, SellerBond } from "./policy";
 export type { LeashNetwork };
 
 export const STATUS = ["OK", "UNKNOWN_AGENT", "REVOKED", "EXPIRED", "SELLER_NOT_ALLOWED", "OVER_CAP"] as const;
@@ -98,7 +101,12 @@ export type GateConfig = {
   /** Also review agents the leash refused (tag2 = the refusal, e.g. "over_cap"). Return true to review this one;
    *  use it to rate-limit, since anyone can send a refused agent's headers. Default: never. */
   reviewRefusals?: (agent: Address, status: LeashStatus) => boolean;
+  /** Your ERC-8004 agent id. Sent in the 402 as `sellerAgentId`, so an agent with a `sellerPolicy` can check your
+   *  bond before it pays. The agent verifies on chain that this id belongs to `seller`, so it can't be borrowed. */
+  agentId?: string | bigint;
 } & Options;
+
+const sellerId = (cfg: GateConfig) => (cfg.agentId !== undefined ? { sellerAgentId: String(cfg.agentId) } : {});
 
 export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<GateResult> {
   const h = (k: string) => { const v = req.headers[k] ?? req.headers[k.toLowerCase()]; return Array.isArray(v) ? v[0] : v; };
@@ -106,7 +114,7 @@ export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<Gate
   const agent = h("x-leash-agent") as Address | undefined;
   const nonce = h("x-leash-nonce"), sig = h("x-leash-proof") as Hex | undefined;
   if (!agent || !nonce || !sig) {
-    return { allow: false, status: 402, body: { error: "payment_required", price: cfg.priceUsd, payTo: cfg.seller, network: net(cfg).chainId, howTo: "Send x-leash-agent, x-leash-nonce and x-leash-proof (agent signature over 'leash:<resource>:<nonce>')." } };
+    return { allow: false, status: 402, body: { error: "payment_required", price: cfg.priceUsd, payTo: cfg.seller, network: net(cfg).chainId, ...sellerId(cfg), howTo: "Send x-leash-agent, x-leash-nonce and x-leash-proof (agent signature over 'leash:<resource>:<nonce>')." } };
   }
   if (!(await verifyMessage({ address: agent, message: proofMessage(resource, nonce), signature: sig }))) {
     return { allow: false, status: 403, body: { error: "bad_proof", reason: "The signature doesn't match x-leash-agent." } };
@@ -119,7 +127,7 @@ export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<Gate
     if (!verdict.ok && cfg.review && verdict.erc8004Id !== "0" && cfg.reviewRefusals?.(agent, verdict.status)) {
       review = await reviewAgent(cfg.review, { agentId: verdict.erc8004Id, outcome: "refused", status: verdict.status, endpoint: resource }, cfg).catch(() => undefined);
     }
-    return { allow: false, status: verdict.ok ? 402 : 403, body: { error: verdict.ok ? "payment_required" : "leash_refused", price: cfg.priceUsd, payTo: cfg.seller, ref, leash: verdict, ...(review ? { review } : {}) } };
+    return { allow: false, status: verdict.ok ? 402 : 403, body: { error: verdict.ok ? "payment_required" : "leash_refused", price: cfg.priceUsd, payTo: cfg.seller, ref, ...sellerId(cfg), leash: verdict, ...(review ? { review } : {}) } };
   }
   const client = clientFor(cfg);
   const rc = await client.getTransactionReceipt({ hash: payment }).catch(() => null);
@@ -223,8 +231,10 @@ export async function payWithLeash(agentAccount: Account, seller: Address, amoun
   return hash;
 }
 
-/** fetch() for agents: on a 402 from a Leash gate, pays inside the leash and retries once. */
-export async function fetchWithLeash(url: string, agentAccount: Account & { signMessage: NonNullable<Account["signMessage"]> }, init: RequestInit & Options = {}) {
+/** fetch() for agents: on a 402 from a Leash gate, pays inside the leash and retries once.
+ *  With `sellerPolicy`, it first checks the seller's bond and returns a 402 `seller_policy` without paying if the
+ *  seller fails it. Off unless you pass it. */
+export async function fetchWithLeash(url: string, agentAccount: Account & { signMessage: NonNullable<Account["signMessage"]> }, init: RequestInit & Options & { sellerPolicy?: SellerPolicy } = {}) {
   const resource = new URL(url).pathname, nonce = toHex(crypto.getRandomValues(new Uint8Array(12)));
   const proof = await agentAccount.signMessage({ message: proofMessage(resource, nonce) });
   const headers = { ...(init.headers as Record<string, string>), "x-leash-agent": agentAccount.address, "x-leash-nonce": nonce, "x-leash-proof": proof };
@@ -232,6 +242,10 @@ export async function fetchWithLeash(url: string, agentAccount: Account & { sign
   if (first.status !== 402) return first;
   const body = await first.json();
   if (!body.ref || !body.payTo) return new Response(JSON.stringify(body), { status: 402 });
+  if (init.sellerPolicy) {
+    const seller = await checkSeller(body.payTo, body.sellerAgentId, { ...init.sellerPolicy, client: init.sellerPolicy.client ?? init.client });
+    if (!seller.ok) return new Response(JSON.stringify({ error: "seller_policy", payTo: body.payTo, ...seller }), { status: 402 });
+  }
   const tx = await payWithLeash(agentAccount, body.payTo, body.price, body.ref, init);
   return fetch(url, { ...init, headers: { ...headers, "x-leash-payment": tx } });
 }
