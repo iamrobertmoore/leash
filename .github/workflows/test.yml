@@ -12,6 +12,8 @@ jobs:
         run: npx hardhat test
       - name: SDK build
         run: cd sdk && npm ci && npm run build
+      - name: SDK tests (seller policy, no network)
+        run: cd sdk && node --test --experimental-strip-types test/*.test.ts
       - name: MCP server, end to end on a local chain
         run: |
           cd mcp && npm ci && npm run build && cd ..

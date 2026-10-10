@@ -92,6 +92,32 @@ const res = await fetchWithLeash("https://leash-monad.vercel.app/api/forecast", 
 On a 402 it pays inside the leash and retries once. If the leash says no, the payment reverts on-chain and
 nothing leaves the account.
 
+### Pay only bonded sellers (optional)
+
+A leash limits how much an agent spends and, with an allow-list, who it pays by address. `sellerPolicy` adds an
+allow-list by stake: the agent pays only a seller whose ERC-8004 identity has a live bond on
+[Sclera](https://monadvision.com/address/0xB4d641f016f53C683c409F271eE85e136041FE3f), where an agent's owner locks
+USDC against a floor on its own claim-truth rate. Off unless you pass it.
+
+```ts
+const res = await fetchWithLeash(url, agent, { sellerPolicy: { requireBond: true, minBondUsd: "0.05", minFloorBps: 8000 } });
+// a seller that fails it: 402 { error: "seller_policy", reason: "no_bond", detail: "...", payTo } and nothing is paid
+```
+
+The agent checks all of this on chain before it pays, from the seller's `sellerAgentId` in the 402:
+
+| check | refused as |
+|---|---|
+| the seller named an ERC-8004 id | `no_agent_id` |
+| that id's owner or agent wallet is the address being paid, so a seller can't borrow another agent's bond | `not_the_payee` |
+| a bond in state Active on Sclera v2, else v1 | `no_bond` |
+| its window has not ended, because a matured bond can be withdrawn at any time | `bond_matured` |
+| at least `minBondUsd` in USDC, a floor of at least `minFloorBps` (both optional) | `bond_too_small`, `floor_too_low` |
+| the chain answered at all: an unreadable chain refuses rather than pays | `unreadable` |
+
+A seller advertises its id with `leashGate(req, { seller, priceUsd, agentId: "10256" })`. To check a seller
+without paying, call `checkSeller(payTo, sellerAgentId, { requireBond: true })`.
+
 ## Getting a leashed agent
 
 1. `npx leash-monad-mcp --new-key` prints a fresh agent address and key (or use any key your agent already has).
