@@ -88,8 +88,9 @@ export type GateConfig = {
   /** Record a payment as used; return false if it was already used. Plug in your store (Redis, a DB row) so one
    *  payment buys exactly one response. Without it, a payment can be replayed until it is maxPaymentAgeSeconds old. */
   claim?: (tx: Hex) => boolean | Promise<boolean>;
-  /** Tokens you accept as payment. Default: the network's USDC and the Leash test dollar. A leash can name any
-   *  ERC-20, so without this check an agent could "pay" in a token worth nothing. */
+  /** Tokens you accept as payment. Default: the network's USDC only (the Leash test dollar where a network has no
+   *  USDC). A leash can name any ERC-20, so without this check an agent could "pay" in a token worth nothing. The test
+   *  dollar is free to mint by design (it powers the demo), so list it explicitly only if you want demo payments. */
   acceptTokens?: Address[];
   /** The seller's key. When set, the gate leaves an ERC-8004 review of each agent it serves ("paid"), so an agent's
    *  track record lives in Monad's Reputation Registry, signed by the sellers who dealt with it. */
@@ -134,7 +135,7 @@ export async function leashGate(req: GateRequest, cfg: GateConfig): Promise<Gate
       if (ev.eventName !== "Paid") continue;
       const a = ev.args;
       const account = await client.readContract({ address: net(cfg).hub, abi: hubAbi, functionName: "accountOf", args: [agent] });
-      const accepted = (cfg.acceptTokens ?? [net(cfg).usdc, net(cfg).testUsd]).filter(Boolean).map((t) => t!.toLowerCase());
+      const accepted = (cfg.acceptTokens ?? [net(cfg).usdc ?? net(cfg).testUsd]).filter(Boolean).map((t) => t!.toLowerCase());
       if (!accepted.includes(a.token.toLowerCase())) {
         return { allow: false, status: 402, body: { error: "token_not_accepted", ref, reason: "That payment was in a token this seller doesn't accept." } };
       }

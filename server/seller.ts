@@ -1,7 +1,7 @@
 // The demo seller: a real paid API ("Monad block & gas forecast", $1 a call) behind the Leash gate.
 import { keccak256, encodePacked, toHex, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { leashGate, paymentRef, proofMessage, checkAgent, payWithLeash } from "../sdk/src/index";
+import { leashGate, paymentRef, proofMessage, checkAgent, payWithLeash, networks } from "../sdk/src/index";
 import { NET } from "./config";
 import { pub, demoKeys, ensureGas } from "./relayer";
 import { accountAbi } from "./abi";
@@ -33,7 +33,9 @@ const reviewRefusals = (agent: Address, status: string) => {
 export async function gate(req: { method: string; url: string; headers: Record<string, any> }) {
   const seller = sellerKey();
   await ensureGas(seller.address, "2").catch(() => undefined);
-  return leashGate(req, { seller: seller.address, priceUsd: PRICE, resource: RESOURCE, network, claim, maxPaymentAgeSeconds: 300, review: seller, reviewRefusals });
+  // The demo takes demo dollars on purpose (judges get $20 of tUSD) as well as USDC; a real seller keeps the USDC-only default.
+  const n = networks[network];
+  return leashGate(req, { seller: seller.address, priceUsd: PRICE, resource: RESOURCE, network, claim, maxPaymentAgeSeconds: 300, review: seller, reviewRefusals, acceptTokens: [n.usdc, n.testUsd].filter(Boolean) as Address[] });
 }
 
 /** The judge's agent buys one forecast the honest way: 402, pay inside the leash, retry, 200. Every stage is returned. */
