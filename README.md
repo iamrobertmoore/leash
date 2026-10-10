@@ -53,6 +53,10 @@ public contracts and this README ([issue #1](https://github.com/iamrobertmoore/l
 leashed Claude Desktop agent, on a $1/day leash that allows only that seller, paid it $0.01 USDC on mainnet through
 `leash-monad-mcp` and got its answer: [`0x1e91…b167`](https://monadvision.com/tx/0x1e911f1167978ac6dcb3504efe663038a2edcbe18775897ca5204c91bbbdb167).
 
+Kanmani then contributed back: [PR #2](https://github.com/iamrobertmoore/leash/pull/2), merged, adds an opt-in
+`sellerPolicy` to the SDK so an agent pays only sellers with a live bond on Monad (`checkSeller`, 13 tests, contracts
+untouched).
+
 `npx leash-monad verify` re-reads all of these from the chain, replays each refused payment to recover the revert
 reason, and checks the rest of this README too. Reads only, no keys, about ten seconds.
 
