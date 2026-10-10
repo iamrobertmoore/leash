@@ -1,0 +1,13 @@
+{
+ "sentinel": {
+  "what": "A third-party paid API on Monad (ERC-8004 agent #10256) that accepts Leash payments with the leash-monad wire format, called from Claude Desktop through leash-monad-mcp",
+  "endpoint": "https://kanmani.xyz/api/service/sentinel",
+  "payee": "0xDB6c6340342e71A63cD11Ebac2185204b7777777",
+  "agent": "0x90e79469820ebCBAdD1EAba3a045e40fDDFe4a74",
+  "account": "0xBaC28bcd10e4c335810c4344cbbE75CD7182CAe0",
+  "token": "USDC",
+  "amountUsd": "0.01",
+  "payment": "0x1e911f1167978ac6dcb3504efe663038a2edcbe18775897ca5204c91bbbdb167",
+  "block": 112129282
+ }
+}

@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { createPublicClient, http, parseAbi, toHex, concat, keccak256, decodeFunctionData, decodeErrorResult, decodeEventLog, type Address, type Hex } from "viem";
 import proofs from "../../docs/proofs.json";
 import reviews from "../../docs/reviews.json";
+import integrations from "../../docs/integrations.json";
 
 const RPC = process.env.LEASH_RPC ?? "https://rpc.monad.xyz";
 const SITE = "https://leash-monad.vercel.app";
@@ -75,6 +76,17 @@ export async function verify(log: (s: string) => void = console.log): Promise<nu
         && a?.clientAddress.toLowerCase() === SELLER.toLowerCase() && a?.tag1 === "leash" && a?.tag2 === tag2, EXPLORER + r);
     });
   }
+
+  log("\nAn outside Monad service paid from a leashed agent (Claude Desktop via leash-monad-mcp)");
+  await step("integration", async () => {
+    const i = integrations.sentinel;
+    const paidAbi = parseAbi(["event Paid(address indexed agent, address indexed seller, address token, uint256 amount, bytes32 ref, uint256 remainingToday)"]);
+    const rc = await pub.getTransactionReceipt({ hash: i.payment as Hex });
+    const ev = rc.logs.filter((l) => l.address.toLowerCase() === i.account.toLowerCase()).map((l) => { try { return decodeEventLog({ abi: paidAbi, data: l.data, topics: l.topics }); } catch { return null; } }).find(Boolean) as any;
+    const acct = await pub.readContract({ address: HUB, abi: parseAbi(["function accountOf(address) view returns (address)"]), functionName: "accountOf", args: [i.agent as Address] });
+    ok(`Leashed agent paid $${i.amountUsd} USDC to a third-party service inside its leash`, rc.status === "success" && acct.toLowerCase() === i.account.toLowerCase()
+      && ev?.args.seller.toLowerCase() === i.payee.toLowerCase() && ev?.args.amount === 10000n && ev?.args.token.toLowerCase() === "0x754704bc059f8c67012fed69bc8a327a5aafb603", EXPLORER + i.payment);
+  });
 
   log("\nPasskeys and identity");
   await step("P256", async () => {
