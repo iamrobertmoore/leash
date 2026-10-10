@@ -47,8 +47,9 @@ and every agent its leash refuses, in Monad's ERC-8004 Reputation Registry (tag 
 | Agent #10327 paid $1 inside its leash and was served | `leash` / `paid` | [`0x9a77…8b6f`](https://monadvision.com/tx/0x9a7745237df478e54c3c4e55f044a6dd41470e52155c3eb48a01d945b5908b6f) |
 | After the hijack, the same agent asked again and the leash said no | `leash` / `over_cap` | [`0xfb01…3ab1`](https://monadvision.com/tx/0xfb014ee877d0363441de4267262feb57b6c743ff8d63b8fadd14274c26243ab1) |
 
-**Another Monad service already takes Leash payments.** During the hackathon an independent ERC-8004 service on Monad
-(agent #10256) built its paid endpoint to Leash's wire format, using only the public contracts and this README. A
+**Another Monad service already takes Leash payments.** During the hackathon [Kanmani](https://kanmani.xyz) built its
+Sentinel API (ERC-8004 agent #10256, a pre-hire verdict on any Monad agent) to accept Leash payments, using only the
+public contracts and this README ([issue #1](https://github.com/iamrobertmoore/leash/issues/1)). A
 leashed Claude Desktop agent, on a $1/day leash that allows only that seller, paid it $0.01 USDC on mainnet through
 `leash-monad-mcp` and got its answer: [`0x1e91…b167`](https://monadvision.com/tx/0x1e911f1167978ac6dcb3504efe663038a2edcbe18775897ca5204c91bbbdb167).
 
